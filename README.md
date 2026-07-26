@@ -1,241 +1,47 @@
 # Modernizing a Legacy Logistics Platform through AWS Integration Services
 
-## Overview
+> **Enterprise AWS Solution Architecture Portfolio Project**
 
-This project demonstrates the modernization of a legacy logistics platform by designing and implementing an event-driven integration architecture on AWS.
-
-The solution decouples legacy systems and external partners through serverless integration services, enabling scalable, resilient, and extensible message processing while supporting multiple integration patterns.
+| Item | Details |
+|------|---------|
+| **Architecture Style** | Event-Driven Serverless Integration Platform |
+| **Cloud Platform** | Amazon Web Services (AWS) |
+| **Infrastructure as Code** | Terraform |
+| **Primary Language** | Python |
+| **Project Status** | Completed |
+| **Author** | Fathi Ayyoub |
 
 ---
+
+## Overview
+
+This project demonstrates the modernization of a legacy logistics and shipment-tracking platform by designing and implementing a scalable, event-driven integration architecture on Amazon Web Services (AWS).
+
+The solution addresses the challenges of integrating legacy business systems with multiple external logistics partners that use different communication protocols and data formats. Rather than relying on tightly coupled point-to-point integrations, the platform adopts an event-driven architecture that improves scalability, resilience, maintainability, and operational visibility.
+
+The implementation leverages Amazon EventBridge, Amazon SQS, AWS Lambda, Amazon API Gateway, Amazon DynamoDB, AWS Secrets Manager, Amazon Kinesis Data Firehose, Amazon S3, AWS Glue, Amazon Athena, Amazon QuickSight, and Terraform to deliver a fully automated cloud-native integration platform.
+
+This repository contains the complete Infrastructure as Code (IaC), Lambda source code, testing artefacts, architecture diagrams, and supporting resources used to design, implement, deploy, test, and validate the solution.
+
+> **Note:** This README provides a high-level overview of the project. The complete design rationale, architectural decisions, implementation details, testing evidence, and production recommendations are documented in the accompanying **Solution Architecture Document (SAD)**.
 
 ## Business Scenario
 
-A logistics company operates a legacy shipment management platform that must integrate with:
+ABC Warehousing and Logistics relies on a legacy Order Management System (OMS) to coordinate shipments with multiple external logistics partners. As the business expanded, the existing integration approach became increasingly difficult to maintain due to tightly coupled interfaces, inconsistent message formats, and limited visibility into message processing.
 
-- External logistics partners
-- Internal on-premises systems
-- Existing AWS workloads
+The organisation required a modern integration platform capable of supporting multiple partner communication methods while improving scalability, reliability, and operational monitoring. The solution also needed to provide end-to-end message tracking, secure partner configuration management, asynchronous processing, and a foundation for future partner onboarding with minimal architectural change.
 
-The existing point-to-point integrations are difficult to maintain, tightly coupled, and difficult to scale.
+To address these requirements, this project modernises the integration layer by implementing an event-driven, serverless architecture on AWS. The platform decouples business systems from integration logic, enabling reliable message processing, standardised data exchange, and enhanced operational analytics while remaining extensible for future business growth.
 
-This project redesigns the integration layer using AWS managed services and event-driven architecture.
+## Solution Overview
 
----
+The proposed solution replaces tightly coupled integrations with an event-driven architecture built on AWS managed services. Incoming requests from internal business systems and external logistics partners are standardised by an inbound adapter before being published to Amazon EventBridge. Events are then routed asynchronously through Amazon SQS to specialised AWS Lambda functions responsible for business processing and outbound partner communication.
 
-## Solution Architecture
+Partner-specific configuration is stored in Amazon DynamoDB, while sensitive credentials are securely managed using AWS Secrets Manager with the AWS Parameters and Secrets Lambda Extension to reduce latency and API calls. Every integration message is tracked throughout its lifecycle, enabling end-to-end observability, retry management, and delivery status reporting.
 
-Core AWS services include:
+Operational analytics are provided through Amazon Kinesis Data Firehose, Amazon S3, AWS Glue, Amazon Athena, and Amazon QuickSight, allowing business users to analyse historical integration events without impacting the operational workload.
 
-- Amazon API Gateway
-- AWS Lambda
-- Amazon EventBridge
-- Amazon SQS
-- Amazon DynamoDB
-- AWS Secrets Manager
-- Amazon S3
-- Amazon Data Firehose
-- AWS Glue
-- Amazon Athena
-- Amazon QuickSight
-- Amazon CloudWatch
+The entire solution is provisioned using Terraform, providing a repeatable and version-controlled Infrastructure as Code (IaC) deployment.
 
----
-
-## Project Structure
-
-```
-Modernizing-Legacy-Logistics-Platform/
-│
-├── diagrams/
-├── docs/
-├── lambdas/
-├── payloads/
-├── simulation/
-├── terraform/
-├── tests/
-├── README.md
-├── requirements.txt
-└── .gitignore
-```
-
----
-
-## Features
-
-- Event-driven architecture
-- Bidirectional Adapter Lambda
-- Long-running asynchronous processing
-- Configurable outbound delivery framework
-- Support for:
-  - External partner callbacks
-  - Internal on-premises systems
-  - AWS workloads
-- DynamoDB-based message state tracking
-- Endpoint configuration repository
-- AWS Secrets Manager integration
-- Retry and DLQ support
-- Cloud-native observability
-
----
-
-## Local Testing
-
-Run all tests:
-
-```bash
-python -m unittest discover -s tests -v
-```
-
-Current status:
-
-- ✅ 31 automated tests passing
-
----
-
-## Infrastructure
-
-Infrastructure is provisioned using Terraform.
-
-Deployment creates:
-
-- Messaging infrastructure
-- Compute resources
-- Data services
-- IAM
-- Monitoring
-- Supporting AWS resources
-
-### Partner callback test setup
-
-Outbound delivery uses runtime operational data in the `PartnerConfiguration`
-DynamoDB table. Partner-specific records are deliberately not seeded by the
-main Terraform deployment. Manual configuration is acceptable for this
-portfolio proof of concept; production should use an audited configuration
-workflow independent of core infrastructure deployment.
-
-Lambda environment-variable names are consistent across code and Terraform:
-
-- `MESSAGE_STATE_TABLE` identifies the deployed message lifecycle table for
-  Adapter, Worker, and Response Lambdas.
-- `PARTNER_CONFIG_TABLE` identifies the deployed partner-configuration table
-  for the Response Lambda.
-
-Deployed Terraform always supplies the environment-prefixed physical table
-names. Local simulations mock state access rather than relying on unsafe
-unprefixed table-name defaults.
-
-#### Canonical event naming
-
-Request events use `eventId`, `eventType`, `eventSource`, `timestamp`,
-`correlation`, and `payload`. Correlation metadata uses `correlationId`,
-`partnerId`, `sourceSystem`, `originalFormat`, and `receivedAt`. Response
-events additionally use `requestEventId`, `requestEventType`, `status`, and
-`message`. `partnerId` is the sole partner-configuration lookup key.
-
-Worker-owned `processingStatus` values are `RECEIVED`, `PROCESSING`,
-`SUCCESS`, `VALIDATION_FAILED`, and `PROCESSING_FAILED`. Response-owned
-`deliveryStatus` values are `PENDING`, `RETRYING`, `CONFIGURATION_FAILED`,
-`DELIVERED`, and `DELIVERY_FAILED`. These lifecycle fields remain independent.
-
-The current runtime supports only `HTTPS_WEBHOOK` and `PRIVATE_HTTPS`. Delivery
-handlers are selected through a central registry so future mechanisms can be
-added without changing the Response Lambda orchestration. A future delivery
-method is not supported until its code, configuration validation, IAM,
-infrastructure, and tests have all been implemented.
-
-#### PartnerConfiguration contract
-
-| Field | Required | Type | Accepted values and default |
-|---|---|---|---|
-| `partnerId` | Yes | String | Non-empty DynamoDB partition key |
-| `enabled` | Yes | Boolean | Missing defaults to disabled |
-| `deliveryMethod` | Yes | String | `HTTPS_WEBHOOK` or `PRIVATE_HTTPS` |
-| `endpointUrl` | Yes | String | Valid `https://` URL |
-| `messageFormat` | No | String | `JSON` (default) or `XML` |
-| `secretId` | No | String | Non-empty Secrets Manager identifier |
-| `timeoutSeconds` | No | Integer | 1–60 seconds; default 10 |
-
-An unauthenticated callback omits `secretId`:
-
-```json
-{
-  "partnerId": "partner-001",
-  "enabled": true,
-  "deliveryMethod": "HTTPS_WEBHOOK",
-  "endpointUrl": "https://webhook.site/REPLACE-WITH-UNIQUE-TOKEN",
-  "messageFormat": "JSON",
-  "timeoutSeconds": 10
-}
-```
-
-An authenticated callback references a secret but never embeds credentials:
-
-```json
-{
-  "partnerId": "partner-001",
-  "enabled": true,
-  "deliveryMethod": "PRIVATE_HTTPS",
-  "endpointUrl": "https://partner.example/callback",
-  "messageFormat": "XML",
-  "secretId": "legacy-logistics-dev/sample-partner/callback-credentials",
-  "timeoutSeconds": 10
-}
-```
-
-The secret `SecretString` must be a JSON object. Both supported credential
-properties are optional:
-
-```json
-{
-  "authorizationHeader": "Bearer example-token",
-  "apiKey": "example-api-key"
-}
-```
-
-Never store real credential values in this repository or Terraform variable
-files. The AWS Parameters and Secrets Lambda Extension retrieves credentials at
-runtime. The typed AWS CLI example in `examples/partner-001.json` can be copied,
-reviewed, and loaded manually after replacing the placeholder with a unique
-test webhook URL:
-
-```powershell
-aws dynamodb put-item `
-  --table-name legacy-logistics-dev-PartnerConfiguration `
-  --item file://examples/partner-001.json `
-  --region ap-southeast-2
-```
-
----
-
-## Documentation
-
-Detailed architecture documentation is available in the `docs/` folder, including:
-
-- Business requirements
-- Architecture Decision Log
-- Solution Architecture Document (SAD)
-- Implementation guide
-- Testing evidence
-- Production considerations
-
----
-
-## Status
-
-Current phase:
-
-✅ Lambda implementation complete
-
-✅ Local testing complete
-
-⬜ Terraform deployment
-
-⬜ AWS deployment
-
-⬜ End-to-end cloud validation
-
----
-
-## License
-
-This repository is provided for portfolio and educational purposes.
+### High-Level Solution Architecture
+![High-Level AWS Architecture](docs/diagrams/AWS%20Solution%20Architecture%20Diagram%20(high-level).png)
