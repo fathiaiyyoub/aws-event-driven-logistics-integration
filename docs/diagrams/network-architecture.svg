@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#091e42" flood-opacity=".16"/></filter>
+    <marker id="blue" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#0052cc"/></marker>
+    <marker id="green" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#00875a"/></marker>
+    <marker id="gray" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#6b778c"/></marker>
+    <style>
+      text{font-family:Arial,"Helvetica Neue",sans-serif;fill:#172b4d}.header{font-size:15px;font-weight:700;letter-spacing:.4px}.service{font-size:13px;font-weight:700;text-anchor:middle}.sub{font-size:10.5px;fill:#5e6c84;text-anchor:middle}.tiny{font-size:9.5px;fill:#5e6c84}.card{fill:#fff;stroke:#dfe1e6;stroke-width:1.5;rx:10;filter:url(#shadow)}.inbound{fill:none;stroke:#0052cc;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#blue)}.outbound{fill:none;stroke:#00875a;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#green)}.internal{fill:none;stroke:#6b778c;stroke-width:2;stroke-dasharray:7 5;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#gray)}.benefit{fill:#dfe1e6}.benefitHead{fill:#fff}
+    </style>
+  </defs>
+  <rect width="1920" height="1080" fill="#fff"/>
+  <text x="44" y="50" font-size="30" font-weight="700">Network Architecture</text>
+  <text x="44" y="78" font-size="14" fill="#5e6c84">Network topology, security boundaries and hybrid connectivity</text>
+
+  <!-- External left -->
+  <rect x="35" y="110" width="270" height="785" rx="14" fill="#f7f9fc" stroke="#0052cc" stroke-width="1.5"/>
+  <rect x="35" y="110" width="270" height="42" rx="14" fill="#b3d4ff"/><text x="55" y="137" class="header">EXTERNAL AND ON-PREMISES</text>
+  <g transform="translate(65 180)"><rect class="card" width="210" height="105"/><circle cx="45" cy="52" r="27" fill="#deebff"/><path d="M31 57c3-14 25-14 28 0M45 47a8 8 0 1 0 0-16 8 8 0 0 0 0 16" fill="none" stroke="#0052cc" stroke-width="3"/><text x="135" y="45" class="service">External Logistics</text><text x="135" y="64" class="service">Partner</text><text x="135" y="84" class="sub">Public internet client</text></g>
+  <g transform="translate(65 330)"><rect class="card" width="210" height="90"/><image href="assets/aws/route53.svg" x="18" y="13" width="62" height="62"/><text x="145" y="41" class="service">Route 53</text><text x="145" y="62" class="sub">Public DNS</text></g>
+  <g transform="translate(65 465)"><rect class="card" width="210" height="90"/><image href="assets/aws/acm.svg" x="18" y="13" width="62" height="62"/><text x="145" y="41" class="service">AWS Certificate Manager</text><text x="145" y="62" class="sub">TLS certificate</text></g>
+  <g transform="translate(65 635)"><rect class="card" width="210" height="115"/><circle cx="45" cy="56" r="27" fill="#eae6ff"/><path d="M29 43h32v28H29zm6 6h20m-20 8h20m-20 8h13" fill="none" stroke="#6554c0" stroke-width="2.5"/><text x="143" y="47" class="service">On-Premises</text><text x="143" y="66" class="service">Legacy OMS</text><text x="143" y="87" class="sub">Private enterprise network</text></g>
+  <g transform="translate(65 790)"><rect class="card" width="210" height="75"/><circle cx="43" cy="38" r="23" fill="#deebff"/><path d="M29 38h28M43 24v28M34 30l18 16M52 30L34 46" stroke="#0052cc" stroke-width="2"/><text x="143" y="33" class="service">Site-to-Site VPN</text><text x="143" y="54" class="sub">Encrypted private tunnel</text></g>
+  <path d="M170 285V330" class="inbound"/><path d="M170 420V465" class="inbound"/>
+
+  <!-- AWS region -->
+  <rect x="330" y="105" width="1235" height="790" rx="16" fill="#fff" stroke="#232f3e" stroke-width="2.5" stroke-dasharray="11 7"/>
+  <rect x="350" y="92" width="250" height="28" fill="#fff"/><text x="360" y="113" font-size="15" font-weight="700">AWS REGION · ap-southeast-2</text>
+
+  <!-- API Gateway outside VPC -->
+  <g transform="translate(360 155)"><rect class="card" width="200" height="115"/><image href="assets/aws/api-gateway.svg" x="20" y="20" width="64" height="64"/><text x="142" y="48" class="service">Regional API Gateway</text><text x="142" y="69" class="sub">Managed public endpoint</text></g>
+  <path d="M275 510H320V213H360" class="inbound"/>
+
+  <!-- VPC -->
+  <rect x="360" y="300" width="735" height="560" rx="15" fill="#f7fbff" stroke="#527fff" stroke-width="3"/>
+  <rect x="360" y="300" width="735" height="42" rx="15" fill="#deebff"/><text x="382" y="327" class="header">INTEGRATION VPC · 10.0.0.0/16</text>
+  <g transform="translate(910 350)"><rect class="card" width="150" height="78"/><circle cx="40" cy="39" r="25" fill="#e3fcef"/><path d="M25 39h30M40 24v30M30 30l20 18M50 30L30 48" stroke="#00875a" stroke-width="2.2"/><text x="105" y="34" class="service">Internet</text><text x="105" y="52" class="service">Gateway</text></g>
+
+  <!-- AZ1 -->
+  <rect x="385" y="365" width="325" height="460" rx="12" fill="#fff" stroke="#7a869a" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <text x="405" y="392" font-size="13" font-weight="700">AVAILABILITY ZONE 1</text>
+  <rect x="405" y="415" width="285" height="135" rx="10" fill="#f0fff4" stroke="#00875a"/><text x="425" y="441" font-size="12" font-weight="700">PUBLIC SUBNET · 10.0.1.0/24</text>
+  <g transform="translate(460 457)"><rect class="card" width="175" height="75"/><image href="assets/aws/nat-gateway.svg" x="15" y="10" width="55" height="55"/><text x="124" y="34" class="service">NAT Gateway</text><text x="124" y="53" class="sub">Outbound internet only</text></g>
+  <rect x="405" y="575" width="285" height="220" rx="10" fill="#f6f3ff" stroke="#6554c0"/><text x="425" y="601" font-size="12" font-weight="700">PRIVATE SUBNET · 10.0.11.0/24</text>
+  <g transform="translate(435 625)"><rect class="card" width="225" height="72"/><image href="assets/aws/lambda.svg" x="14" y="9" width="54" height="54"/><text x="148" y="31" class="service">Bidirectional Adapter</text><text x="148" y="50" class="service">Lambda</text></g>
+  <g transform="translate(435 715)"><rect class="card" width="225" height="62"/><image href="assets/aws/lambda.svg" x="14" y="5" width="52" height="52"/><text x="150" y="28" class="service">Outbound Response Lambda</text><text x="150" y="46" class="sub">Private execution environment</text></g>
+
+  <!-- AZ2 -->
+  <rect x="735" y="450" width="325" height="375" rx="12" fill="#fff" stroke="#7a869a" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <text x="755" y="477" font-size="13" font-weight="700">AVAILABILITY ZONE 2</text>
+  <rect x="755" y="500" width="285" height="90" rx="10" fill="#f0fff4" stroke="#00875a"/><text x="775" y="526" font-size="12" font-weight="700">PUBLIC SUBNET · 10.0.2.0/24</text><text x="898" y="557" class="sub">No NAT Gateway in this design</text>
+  <rect x="755" y="615" width="285" height="180" rx="10" fill="#f6f3ff" stroke="#6554c0"/><text x="775" y="641" font-size="12" font-weight="700">PRIVATE SUBNET · 10.0.12.0/24</text>
+  <g transform="translate(785 670)"><rect class="card" width="225" height="72"/><image href="assets/aws/lambda.svg" x="14" y="9" width="54" height="54"/><text x="148" y="31" class="service">Private Lambda</text><text x="148" y="50" class="sub">Scalable execution capacity</text></g>
+
+  <!-- Managed services outside VPC -->
+  <rect x="1120" y="145" width="415" height="715" rx="14" fill="#f7f9fc" stroke="#0052cc" stroke-width="1.5"/>
+  <rect x="1120" y="145" width="415" height="42" rx="14" fill="#b3d4ff"/><text x="1140" y="172" class="header">AWS MANAGED SERVICES · OUTSIDE VPC</text>
+  <g transform="translate(1150 215)"><rect class="card" width="165" height="110"/><image href="assets/aws/lambda.svg" x="51" y="9" width="64" height="64"/><text x="83" y="94" class="service">Worker Lambda</text></g>
+  <g transform="translate(1340 215)"><rect class="card" width="165" height="110"/><image href="assets/aws/eventbridge.svg" x="51" y="9" width="64" height="64"/><text x="83" y="94" class="service">EventBridge</text></g>
+  <g transform="translate(1150 365)"><rect class="card" width="165" height="105"/><image href="assets/aws/sqs.svg" x="51" y="8" width="64" height="64"/><text x="83" y="90" class="service">Shipment SQS</text></g>
+  <g transform="translate(1340 365)"><rect class="card" width="165" height="105"/><image href="assets/aws/sqs.svg" x="51" y="8" width="64" height="64"/><text x="83" y="90" class="service">Response SQS</text></g>
+  <g transform="translate(1150 510)"><rect class="card" width="165" height="115"/><image href="assets/aws/dynamodb.svg" x="51" y="8" width="64" height="64"/><text x="83" y="90" class="service">PartnerConfiguration</text><text x="83" y="106" class="sub">DynamoDB</text></g>
+  <g transform="translate(1340 510)"><rect class="card" width="165" height="115"/><image href="assets/aws/dynamodb.svg" x="51" y="8" width="64" height="64"/><text x="83" y="90" class="service">IntegrationMessageState</text><text x="83" y="106" class="sub">DynamoDB</text></g>
+  <g transform="translate(1245 675)"><rect class="card" width="165" height="115"/><image href="assets/aws/secrets-manager.svg" x="51" y="8" width="64" height="64"/><text x="83" y="91" class="service">Secrets Manager</text></g>
+
+  <!-- Right external -->
+  <rect x="1590" y="110" width="295" height="785" rx="14" fill="#f7f9fc" stroke="#0052cc" stroke-width="1.5"/>
+  <rect x="1590" y="110" width="295" height="42" rx="14" fill="#b3d4ff"/><text x="1610" y="137" class="header">CONNECTED DESTINATIONS</text>
+  <g transform="translate(1625 205)"><rect class="card" width="225" height="120"/><circle cx="50" cy="60" r="30" fill="#e3fcef"/><path d="M34 61c0-9 7-15 15-15 3-10 20-10 23 3 10 0 12 15 2 17H42c-5 0-8-2-8-5z" fill="none" stroke="#00875a" stroke-width="3"/><text x="150" y="47" class="service">External Partner</text><text x="150" y="66" class="service">HTTPS Endpoint</text><text x="150" y="88" class="sub">Internet destination</text></g>
+  <g transform="translate(1625 430)"><rect class="card" width="225" height="115"/><circle cx="50" cy="57" r="28" fill="#deebff"/><path d="M34 61c0-8 6-13 13-13 2-8 17-8 19 2 9 0 11 13 2 16H40c-4 0-6-2-6-5z" fill="none" stroke="#0052cc" stroke-width="2.5"/><text x="150" y="48" class="service">Existing AWS</text><text x="150" y="67" class="service">Workloads</text><text x="150" y="88" class="sub">Internal connectivity</text></g>
+  <g transform="translate(1625 660)"><rect class="card" width="225" height="115"/><circle cx="50" cy="57" r="28" fill="#eae6ff"/><path d="M34 45h32v25H34zm6 6h20m-20 7h20m-20 7h13" fill="none" stroke="#6554c0" stroke-width="2.5"/><text x="150" y="48" class="service">Legacy OMS</text><text x="150" y="69" class="sub">Via Site-to-Site VPN</text></g>
+
+  <!-- Connectivity -->
+  <path d="M560 213H620V625H548" class="inbound"/><text x="627" y="430" class="tiny">API integration</text>
+  <path d="M275 827H330V660H435" class="inbound"/><text x="342" y="650" class="tiny">Private VPN path</text>
+  <path d="M1625 487H1515V645H660" class="inbound"/><text x="1520" y="475" class="tiny">Internal request</text>
+  <path d="M1625 718H1560V820H330V690H435" class="inbound"/>
+  <path d="M660 657H1110V270H1340" class="internal"/><path d="M660 675H1100V568H1340" class="internal"/>
+  <path d="M1150 270H1105V417H1150" class="internal"/><path d="M1315 270H1340" class="internal"/><path d="M1232 325V510" class="internal"/>
+  <path d="M660 746H1110V417H1340" class="internal"/><path d="M660 756H1100V568H1150" class="internal"/><path d="M660 766H1120V733H1245" class="internal"/>
+  <path d="M660 735H720V495H635" class="outbound"/><path d="M635 457H900V389H910" class="outbound"/><path d="M1060 389H1570V265H1625" class="outbound"/>
+
+  <!-- Legend -->
+  <rect x="360" y="870" width="1175" height="25" fill="#fff"/><line x1="390" y1="882" x2="450" y2="882" stroke="#0052cc" stroke-width="3" marker-end="url(#blue)"/><text x="465" y="886" class="tiny">Inbound / private connectivity</text><line x1="670" y1="882" x2="730" y2="882" stroke="#00875a" stroke-width="3" marker-end="url(#green)"/><text x="745" y="886" class="tiny">Outbound internet path</text><line x1="930" y1="882" x2="990" y2="882" stroke="#6b778c" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#gray)"/><text x="1005" y="886" class="tiny">AWS service communication</text>
+
+  <!-- Principles -->
+  <rect x="35" y="925" width="1850" height="120" rx="14" fill="#232f3e"/>
+  <text x="65" y="956" font-size="15" font-weight="700" class="benefitHead">NETWORK DESIGN PRINCIPLES</text>
+  <text x="65" y="988" font-size="12" class="benefit">• Private Lambda execution.</text><text x="65" y="1016" font-size="12" class="benefit">• Only outbound internet access uses the NAT Gateway.</text>
+  <text x="490" y="988" font-size="12" class="benefit">• Site-to-Site VPN provides private connectivity to the legacy OMS.</text><text x="490" y="1016" font-size="12" class="benefit">• Existing AWS workloads communicate internally.</text>
+  <text x="1135" y="988" font-size="12" class="benefit">• EventBridge, SQS and DynamoDB remain AWS managed services.</text><text x="1135" y="1016" font-size="12" class="benefit">• Security boundaries separate public and private resources.</text>
+  <text x="1875" y="1068" text-anchor="end" font-size="10" fill="#7a869a">AWS Architecture Icons • network topology view</text>
+</svg>

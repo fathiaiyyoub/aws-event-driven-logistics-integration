@@ -1,0 +1,12 @@
+{
+    "eventId": "evt-001",
+    "correlationId": "corr-001",
+    "eventType": "CreateShipment",
+    "eventSource": "PartnerA",
+    "timestamp": "2026-07-21T10:00:00Z",
+    "payload": {
+        "shipmentId": "SHIP-1001",
+        "customer": "ABC Retail",
+        "destination": "Sydney"
+    }
+}

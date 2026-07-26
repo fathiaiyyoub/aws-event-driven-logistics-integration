@@ -1,0 +1,8 @@
+[
+  {
+    "Detail": "{\"eventId\":\"evt-internal-20260724-212319\",\"eventType\":\"UpdateShipmentStatus\",\"eventSource\":\"partner-001\",\"timestamp\":\"2026-07-24T11:23:19Z\",\"correlation\":{\"correlationId\":\"corr-internal-20260724-212319\",\"partnerId\":\"partner-001\",\"sourceSystem\":\"partner-001\",\"originalFormat\":\"JSON\",\"receivedAt\":\"2026-07-24T11:23:19Z\"},\"payload\":{\"shipmentId\":\"SHIP-INTERNAL-001\",\"status\":\"DELIVERED\"}}",
+    "EventBusName": "legacy-logistics-dev-integration-bus",
+    "Source": "legacy.logistics.adapter",
+    "DetailType": "UpdateShipmentStatus"
+  }
+]

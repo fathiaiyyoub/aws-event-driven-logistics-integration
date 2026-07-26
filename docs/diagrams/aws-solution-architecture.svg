@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#091e42" flood-opacity=".16"/></filter>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#0052cc"/></marker>
+    <marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#8e44ad"/></marker>
+    <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#00875a"/></marker>
+    <style>
+      text{font-family:Arial,"Helvetica Neue",sans-serif;fill:#172b4d}.layerTitle{font-size:17px;font-weight:700;letter-spacing:.3px}.service{font-size:13px;font-weight:700;text-anchor:middle}.sub{font-size:10.5px;font-weight:400;fill:#5e6c84}.small{font-size:11px}.light{fill:#fff}.mutedLight{fill:#dfe1e6}.flow{fill:none;stroke-width:3;stroke-linecap:round;stroke-linejoin:round}.dashed{stroke-dasharray:8 7}.card{fill:#fff;stroke:#dfe1e6;stroke-width:1.5;rx:10;filter:url(#shadow)}
+    </style>
+  </defs>
+  <rect width="1920" height="1080" fill="#f7f9fc"/>
+  <text x="42" y="48" font-size="29" font-weight="700">Modernizing a Legacy Logistics Platform</text>
+  <text x="42" y="78" font-size="14" fill="#5e6c84">Portfolio-scale event-driven integration architecture · AWS Asia Pacific (Sydney)</text>
+  <g transform="translate(1600 28)"><rect width="275" height="55" rx="8" fill="#fff7e6" stroke="#ff9900"/><text x="16" y="23" font-size="12" font-weight="700">PORTFOLIO DESIGN DECISION</text><text x="16" y="42" font-size="11">Single NAT Gateway controls deployment cost</text></g>
+
+  <!-- Sources outside AWS -->
+  <rect x="30" y="115" width="300" height="800" rx="14" fill="#f4f5f7" stroke="#7a869a" stroke-width="2"/>
+  <path d="M30 158H330" stroke="#7a869a" stroke-width="2"/><text x="52" y="144" class="layerTitle">1  SOURCES &amp; CONSUMERS</text>
+  <g filter="url(#shadow)"><rect x="70" y="205" width="220" height="95" rx="12" fill="#fff" stroke="#7a869a"/><circle cx="112" cy="252" r="24" fill="#deebff"/><path d="M98 256c3-13 25-13 28 0M112 246a8 8 0 1 0 0-16 8 8 0 0 0 0 16" fill="none" stroke="#0052cc" stroke-width="3"/><text x="195" y="244" class="service">External logistics</text><text x="195" y="264" class="service">partners</text></g>
+  <g filter="url(#shadow)"><rect x="70" y="360" width="220" height="95" rx="12" fill="#fff" stroke="#7a869a"/><circle cx="112" cy="407" r="24" fill="#eae6ff"/><path d="M97 395h30v26H97zm5 6h20m-20 7h20m-20 7h12" fill="none" stroke="#6554c0" stroke-width="2.5"/><text x="195" y="399" class="service">On-premises</text><text x="195" y="419" class="service">legacy platform</text></g>
+  <g filter="url(#shadow)"><rect x="70" y="515" width="220" height="95" rx="12" fill="#fff" stroke="#7a869a"/><circle cx="112" cy="562" r="24" fill="#e3fcef"/><path d="M95 566c0-8 6-13 13-13 2-8 17-8 19 2 9 0 11 13 2 16H101c-4 0-6-2-6-5z" fill="none" stroke="#00875a" stroke-width="2.5"/><text x="195" y="554" class="service">Existing AWS</text><text x="195" y="574" class="service">workloads</text></g>
+  <g filter="url(#shadow)"><rect x="70" y="735" width="220" height="105" rx="12" fill="#e3fcef" stroke="#00875a"/><circle cx="112" cy="787" r="24" fill="#fff"/><path d="M99 787l8 8 18-19" fill="none" stroke="#00875a" stroke-width="4"/><text x="195" y="779" class="service">Partner HTTPS</text><text x="195" y="799" class="service">callback endpoint</text></g>
+
+  <!-- AWS Region and logical layers -->
+  <rect x="355" y="105" width="1535" height="810" rx="16" fill="#fff" stroke="#232f3e" stroke-width="2.5" stroke-dasharray="11 7"/>
+  <rect x="375" y="92" width="230" height="28" fill="#f7f9fc"/><text x="386" y="113" font-size="15" font-weight="700">AWS REGION · ap-southeast-2</text>
+  <rect x="380" y="140" width="590" height="740" rx="14" fill="#fff8f0" stroke="#c65d00" stroke-width="2"/>
+  <rect x="380" y="140" width="590" height="44" rx="14" fill="#ffb86c"/><text x="402" y="169" class="layerTitle">2  INTEGRATION LAYER</text>
+  <rect x="990" y="140" width="280" height="740" rx="14" fill="#f3f0ff" stroke="#6554c0" stroke-width="2"/>
+  <rect x="990" y="140" width="280" height="44" rx="14" fill="#b3a4ff"/><text x="1012" y="169" class="layerTitle">3  PROCESSING LAYER</text>
+  <rect x="1290" y="140" width="575" height="740" rx="14" fill="#f0fff4" stroke="#00875a" stroke-width="2"/>
+  <rect x="1290" y="140" width="575" height="44" rx="14" fill="#79f2c0"/><text x="1312" y="169" class="layerTitle">4  ANALYTICS &amp; DATA LAKE</text>
+
+  <!-- Integration managed services -->
+  <g transform="translate(405 215)"><rect class="card" width="125" height="128"/><image href="assets/aws/route53.svg" x="31" y="13" width="64" height="64"/><text x="63" y="96" class="service">Route 53</text><text x="63" y="113" class="sub">DNS alias</text></g>
+  <g transform="translate(545 215)"><rect class="card" width="125" height="128"/><image href="assets/aws/acm.svg" x="31" y="13" width="64" height="64"/><text x="63" y="96" class="service">ACM</text><text x="63" y="113" class="sub">TLS certificate</text></g>
+  <g transform="translate(685 215)"><rect class="card" width="135" height="128"/><image href="assets/aws/api-gateway.svg" x="36" y="13" width="64" height="64"/><text x="68" y="96" class="service">API Gateway</text><text x="68" y="113" class="sub">Validated REST API</text></g>
+  <g transform="translate(825 205)"><rect width="130" height="145" rx="11" fill="#fff" stroke="#8e44ad" stroke-width="3" filter="url(#shadow)"/><image href="assets/aws/eventbridge.svg" x="29" y="14" width="72" height="72"/><text x="65" y="108" class="service" font-size="14">EventBridge</text><text x="65" y="127" class="service" font-size="12">Custom Bus</text><text x="65" y="140" class="sub">Central event router</text></g>
+  <g transform="translate(835 390)"><rect class="card" width="115" height="132"/><image href="assets/aws/sqs.svg" x="26" y="13" width="64" height="64"/><text x="58" y="96" class="service">Shipment SQS</text><text x="58" y="114" class="sub">Queue + DLQ</text></g>
+  <g transform="translate(820 600)"><rect class="card" width="115" height="132"/><image href="assets/aws/sqs.svg" x="26" y="13" width="64" height="64"/><text x="58" y="96" class="service">Response SQS</text><text x="58" y="114" class="sub">Queue + DLQ</text></g>
+
+  <!-- VPC boundary with subnet detail -->
+  <rect x="405" y="375" width="405" height="390" rx="12" fill="#f8fbff" stroke="#147eba" stroke-width="3" stroke-dasharray="10 6"/>
+  <rect x="420" y="359" width="225" height="30" rx="4" fill="#fff" stroke="#147eba"/><text x="432" y="380" font-size="13" font-weight="700" fill="#147eba">AMAZON VPC · 10.0.0.0/16</text>
+  <rect x="425" y="410" width="174" height="285" rx="8" fill="#fff" stroke="#8bbbd9"/><text x="438" y="433" class="small" font-weight="700">Availability Zone A</text>
+  <rect x="615" y="410" width="174" height="285" rx="8" fill="#fff" stroke="#8bbbd9"/><text x="628" y="433" class="small" font-weight="700">Availability Zone B</text>
+  <rect x="438" y="455" width="148" height="88" rx="6" fill="#e9f5ff" stroke="#147eba"/><text x="512" y="475" class="small" text-anchor="middle" font-weight="700">Private subnet</text>
+  <rect x="628" y="455" width="148" height="88" rx="6" fill="#e9f5ff" stroke="#147eba"/><text x="702" y="475" class="small" text-anchor="middle" font-weight="700">Private subnet</text>
+  <image href="assets/aws/lambda.svg" x="480" y="485" width="46" height="46"/><image href="assets/aws/lambda.svg" x="670" y="485" width="46" height="46"/>
+  <text x="607" y="554" class="service" font-size="14">Bidirectional Adapter Lambda</text><text x="607" y="573" class="sub">Inbound: external XML/JSON to Canonical JSON</text><text x="607" y="589" class="sub">Outbound: Canonical JSON to partner-required format</text>
+  <rect x="438" y="620" width="148" height="65" rx="6" fill="#e3fcef" stroke="#00875a"/><image href="assets/aws/nat-gateway.svg" x="449" y="629" width="42" height="42"/><text x="532" y="646" class="small" text-anchor="middle" font-weight="700">Public subnet</text><text x="532" y="663" class="sub" text-anchor="middle">Single NAT Gateway</text>
+  <g transform="translate(628 609)"><rect width="148" height="84" rx="6" fill="#e9f5ff" stroke="#147eba"/><image href="assets/aws/lambda.svg" x="10" y="17" width="48" height="48"/><text x="102" y="35" class="small" text-anchor="middle" font-weight="700">Response</text><text x="102" y="52" class="small" text-anchor="middle" font-weight="700">Lambda</text><text x="102" y="69" class="sub" text-anchor="middle">HTTPS delivery</text></g>
+  <rect x="610" y="600" width="340" height="145" rx="10" fill="none" stroke="#6b778c" stroke-width="1.5" stroke-dasharray="6 5"/>
+  <rect x="745" y="589" width="150" height="24" rx="4" fill="#fff8f0"/><text x="820" y="606" class="small" text-anchor="middle" font-weight="700" fill="#42526e">OUTBOUND DELIVERY</text>
+  <g transform="translate(405 790)"><rect class="card" width="185" height="70"/><image href="assets/aws/dynamodb.svg" x="12" y="12" width="48" height="48"/><text x="119" y="27" class="service">DynamoDB</text><text x="119" y="45" class="sub">Partner config + message state</text><text x="119" y="60" class="sub">processingStatus / deliveryStatus</text></g>
+  <g transform="translate(610 790)"><rect class="card" width="185" height="70"/><image href="assets/aws/secrets-manager.svg" x="12" y="12" width="48" height="48"/><text x="120" y="28" class="service">Secrets Manager</text><text x="120" y="47" class="sub">Sensitive callback</text><text x="120" y="62" class="sub">credentials only</text></g>
+
+  <!-- Processing -->
+  <g transform="translate(1020 270)"><rect width="220" height="270" rx="12" fill="#fff" stroke="#6554c0" stroke-width="3" filter="url(#shadow)"/><image href="assets/aws/lambda.svg" x="72" y="24" width="76" height="76"/><text x="110" y="132" class="service" font-size="17">Worker Lambda</text><text x="110" y="165" class="sub">Validates canonical payload</text><text x="110" y="184" class="sub">Simulates shipment processing</text><path d="M30 211H190" stroke="#dfe1e6"/><text x="110" y="237" class="small" text-anchor="middle" font-weight="700">Owns processingStatus</text><text x="110" y="257" class="sub">Runs outside the VPC</text></g>
+  <g transform="translate(1040 610)"><rect class="card" width="180" height="105"/><image href="assets/aws/eventbridge.svg" x="10" y="24" width="54" height="54"/><text x="121" y="37" class="service" font-size="13">Response Event</text><text x="124" y="61" class="sub" text-anchor="middle">Stable eventId</text><text x="124" y="77" class="sub" text-anchor="middle">and correlationId</text><text x="124" y="94" class="sub" text-anchor="middle">Reusable response pattern</text></g>
+
+  <!-- Analytics -->
+  <g transform="translate(1325 220)"><rect class="card" width="135" height="135"/><image href="assets/aws/eventbridge.svg" x="36" y="15" width="64" height="64"/><text x="68" y="101" class="service">Analytics rule</text><text x="68" y="119" class="sub">Exact event patterns</text></g>
+  <g transform="translate(1500 220)"><rect class="card" width="145" height="135"/><image href="assets/aws/firehose.svg" x="41" y="15" width="64" height="64"/><text x="73" y="101" class="service">Data Firehose</text><text x="73" y="119" class="sub">Buffered conversion</text></g>
+  <g transform="translate(1685 220)"><rect class="card" width="145" height="135"/><image href="assets/aws/s3.svg" x="41" y="15" width="64" height="64"/><text x="73" y="101" class="service">S3 data lake</text><text x="73" y="119" class="sub">Partitioned Parquet</text></g>
+  <g transform="translate(1380 455)"><rect class="card" width="150" height="135"/><image href="assets/aws/glue.svg" x="43" y="15" width="64" height="64"/><text x="75" y="101" class="service">AWS Glue</text><text x="75" y="119" class="sub">Catalog schema</text></g>
+  <g transform="translate(1610 455)"><rect class="card" width="150" height="135"/><image href="assets/aws/athena.svg" x="43" y="15" width="64" height="64"/><text x="75" y="101" class="service">Amazon Athena</text><text x="75" y="119" class="sub">Cost-controlled SQL</text></g>
+  <rect x="1340" y="680" width="475" height="115" rx="10" fill="#fff" stroke="#79f2c0"/><text x="1363" y="710" font-size="13" font-weight="700">Analytics design</text><text x="1363" y="735" class="small">• Firehose batches events to reduce small-file inflation</text><text x="1363" y="757" class="small">• Snappy Parquet reduces storage and Athena scan volume</text><text x="1363" y="779" class="small">• year / month / day partitions constrain query scans</text>
+
+  <!-- Main flows -->
+  <path d="M290 252H405" class="flow" stroke="#0052cc" marker-end="url(#arrowBlue)"/><text x="347" y="238" class="small" text-anchor="middle">HTTPS</text>
+  <path d="M290 407H350V252H405" class="flow" stroke="#0052cc" marker-end="url(#arrowBlue)"/><path d="M290 562H350V252H405" class="flow" stroke="#0052cc" marker-end="url(#arrowBlue)"/>
+  <path d="M530 279H545M670 279H685M820 279H835" class="flow" stroke="#0052cc" marker-end="url(#arrowBlue)"/>
+  <path d="M752 343V365H607V455" class="flow" stroke="#0052cc" marker-end="url(#arrowBlue)"/><text x="678" y="359" class="small" text-anchor="middle">validated request</text>
+  <path d="M607 455V365H890V350" class="flow" stroke="#8e44ad" marker-end="url(#arrowPurple)"/><text x="785" y="382" class="small" text-anchor="middle">Canonical JSON Event</text>
+  <path d="M890 350V390" class="flow" stroke="#8e44ad" marker-end="url(#arrowPurple)"/><path d="M950 456H1020" class="flow" stroke="#8e44ad" marker-end="url(#arrowPurple)"/><text x="984" y="442" class="small" text-anchor="middle">SQS batch</text>
+  <path d="M1130 540V610" class="flow" stroke="#6554c0" marker-end="url(#arrowPurple)"/><path d="M1040 662H970V666H935" class="flow" stroke="#8e44ad" marker-end="url(#arrowPurple)"/><text x="994" y="641" class="small" text-anchor="middle">EventBridge</text>
+  <path d="M820 666H776" class="flow" stroke="#8e44ad" marker-end="url(#arrowPurple)"/><path d="M628 651H350V787H290" class="flow" stroke="#00875a" marker-end="url(#arrowGreen)"/><text x="440" y="773" class="small" text-anchor="middle">HTTPS callback via NAT</text>
+  <path d="M955 277H1280V287H1325" class="flow dashed" stroke="#00875a" marker-end="url(#arrowGreen)"/><text x="1125" y="264" class="small" text-anchor="middle">Adapter + Worker lifecycle events</text>
+  <path d="M1460 287H1500M1645 287H1685" class="flow" stroke="#00875a" marker-end="url(#arrowGreen)"/><path d="M1757 355V420H1455V455" class="flow dashed" stroke="#00875a" marker-end="url(#arrowGreen)"/><path d="M1530 522H1610" class="flow" stroke="#00875a" marker-end="url(#arrowGreen)"/>
+  <path d="M607 580V790" class="flow dashed" stroke="#147eba" marker-end="url(#arrowBlue)"/><path d="M702 678V790" class="flow dashed" stroke="#d13212" marker-end="url(#arrowBlue)"/>
+
+  <!-- Cross-cutting operations -->
+  <rect x="355" y="945" width="1535" height="92" rx="12" fill="#232f3e"/>
+  <text x="390" y="978" font-size="15" font-weight="700" class="light">CROSS-CUTTING OPERATIONS</text>
+  <image href="assets/aws/cloudwatch.svg" x="665" y="958" width="55" height="55"/><text x="735" y="980" font-size="13" font-weight="700" class="light">Amazon CloudWatch</text><text x="735" y="1001" font-size="11" class="mutedLight">Logs · metrics · alarms · 30-day Lambda retention</text>
+  <image href="assets/aws/cloudtrail.svg" x="1250" y="958" width="55" height="55"/><text x="1320" y="980" font-size="13" font-weight="700" class="light">AWS CloudTrail</text><text x="1320" y="1001" font-size="11" class="mutedLight">Management events · validated logs · 90-day lifecycle</text>
+  <g transform="translate(42 963)"><line x1="0" y1="0" x2="70" y2="0" stroke="#0052cc" stroke-width="3" marker-end="url(#arrowBlue)"/><text x="0" y="24" font-size="10">Request / delivery</text><line x1="130" y1="0" x2="200" y2="0" stroke="#8e44ad" stroke-width="3" marker-end="url(#arrowPurple)"/><text x="130" y="24" font-size="10">Async event</text><line x1="0" y1="45" x2="70" y2="45" stroke="#00875a" stroke-width="3" stroke-dasharray="8 7" marker-end="url(#arrowGreen)"/><text x="0" y="68" font-size="10">Analytics branch</text></g>
+  <text x="1875" y="1060" text-anchor="end" font-size="10" fill="#7a869a">AWS Architecture Icons · official package 04302026</text>
+</svg>

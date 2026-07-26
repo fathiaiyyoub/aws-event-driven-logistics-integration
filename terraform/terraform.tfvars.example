@@ -1,0 +1,22 @@
+# Copy this file to terraform.tfvars and replace the placeholder values.
+# This file contains deployment configuration only; never commit credentials or
+# Secrets Manager secret values.
+
+aws_region  = "ap-southeast-2"
+project_name = "legacy-logistics"
+environment  = "dev"
+
+# The Route 53 public hosted zone must own this API domain (for example, the
+# example.com hosted zone must own api.example.com).
+api_domain_name = "api.example.com"
+route53_zone_id = "REPLACE_WITH_PUBLIC_HOSTED_ZONE_ID"
+
+# This Lambda layer ARN is region-specific. Obtain the current AWS Parameters
+# and Secrets Lambda Extension ARN for aws_region before deployment.
+secrets_extension_layer_arn = "REPLACE_WITH_REGION_SPECIFIC_EXTENSION_LAYER_ARN"
+
+# Keep false unless automatic deletion of a non-production data lake is intended.
+data_lake_force_destroy = false
+
+# CloudWatch supports a fixed set of retention periods; 30 days suits this POC.
+lambda_log_retention_days = 30

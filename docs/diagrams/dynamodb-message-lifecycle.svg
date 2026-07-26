@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#091e42" flood-opacity=".16"/></filter>
+    <marker id="blue" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#0052cc"/></marker>
+    <marker id="green" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#00875a"/></marker>
+    <marker id="red" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#de350b"/></marker>
+    <style>
+      text{font-family:Arial,"Helvetica Neue",sans-serif;fill:#172b4d}.header{font-size:15px;font-weight:700;letter-spacing:.4px}.service{font-size:14px;font-weight:700;text-anchor:middle}.sub{font-size:11px;fill:#5e6c84;text-anchor:middle}.small{font-size:11px;fill:#42526e}.tiny{font-size:10px;fill:#5e6c84}.card{fill:#fff;stroke:#dfe1e6;stroke-width:1.5;rx:11;filter:url(#shadow)}.flow{fill:none;stroke:#0052cc;stroke-width:3;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#blue)}.success{fill:none;stroke:#00875a;stroke-width:2.5;marker-end:url(#green)}.failure{fill:none;stroke:#de350b;stroke-width:2.5;marker-end:url(#red)}.benefit{fill:#dfe1e6}.benefitHead{fill:#fff}
+    </style>
+  </defs>
+  <rect width="1920" height="1080" fill="#fff"/>
+  <text x="44" y="50" font-size="30" font-weight="700">DynamoDB Message Lifecycle</text>
+  <text x="44" y="78" font-size="14" fill="#5e6c84">Durable tracking from initial acceptance through processing and outbound delivery</text>
+
+  <!-- Main sections -->
+  <rect x="35" y="110" width="405" height="650" rx="14" fill="#f7f9fc" stroke="#0052cc" stroke-width="1.5"/>
+  <rect x="35" y="110" width="405" height="42" rx="14" fill="#b3d4ff"/><text x="55" y="137" class="header">LIFECYCLE CREATION</text>
+  <rect x="465" y="110" width="500" height="650" rx="14" fill="#f7f9fc" stroke="#0052cc" stroke-width="1.5"/>
+  <rect x="465" y="110" width="500" height="42" rx="14" fill="#b3d4ff"/><text x="485" y="137" class="header">DURABLE MESSAGE LIFECYCLE</text>
+  <rect x="990" y="110" width="440" height="650" rx="14" fill="#f7f9fc" stroke="#0052cc" stroke-width="1.5"/>
+  <rect x="990" y="110" width="440" height="42" rx="14" fill="#b3d4ff"/><text x="1010" y="137" class="header">STATUS OWNERSHIP AND UPDATES</text>
+  <rect x="1455" y="110" width="430" height="650" rx="14" fill="#f7f9fc" stroke="#0052cc" stroke-width="1.5"/>
+  <rect x="1455" y="110" width="430" height="42" rx="14" fill="#b3d4ff"/><text x="1475" y="137" class="header">TERMINAL STATES</text>
+
+  <!-- Creation -->
+  <g transform="translate(90 185)"><rect class="card" width="295" height="130"/><image href="assets/aws/lambda.svg" x="116" y="12" width="64" height="64"/><text x="148" y="99" class="service">Bidirectional Adapter Lambda</text><text x="148" y="118" class="sub">Accepts and correlates the message</text></g>
+  <path d="M238 315V365" class="flow"/><text x="255" y="345" class="small">Creates initial lifecycle record</text>
+  <g transform="translate(90 375)"><rect class="card" width="295" height="325"/><image href="assets/aws/dynamodb.svg" x="116" y="14" width="64" height="64"/><text x="148" y="101" class="service">IntegrationMessageState</text><line x1="35" y1="120" x2="260" y2="120" stroke="#dfe1e6"/><text x="47" y="150" class="small">• correlationId</text><text x="47" y="176" class="small">• eventId</text><text x="47" y="202" class="small">• partnerId</text><text x="47" y="228" class="small">• processingStatus = RECEIVED</text><text x="47" y="254" class="small">• deliveryStatus = NOT_STARTED</text><text x="47" y="280" class="small">• createdAt</text><text x="47" y="306" class="small">• expiresAt (TTL)</text></g>
+
+  <!-- Central record -->
+  <g transform="translate(515 180)"><rect width="400" height="520" rx="14" fill="#fff" stroke="#527fff" stroke-width="3" filter="url(#shadow)"/><image href="assets/aws/dynamodb.svg" x="145" y="24" width="110" height="110"/><text x="200" y="166" class="service" font-size="20">IntegrationMessageState</text><text x="200" y="191" class="sub" font-size="14">Durable Message Lifecycle</text><line x1="55" y1="217" x2="345" y2="217" stroke="#dfe1e6"/><rect x="70" y="242" width="260" height="225" rx="9" fill="#f4f5f7" stroke="#c1c7d0"/><text x="96" y="274" font-size="12" font-family="monospace">correlationId</text><text x="96" y="300" font-size="12" font-family="monospace">eventId</text><text x="96" y="326" font-size="12" font-family="monospace">partnerId</text><text x="96" y="352" font-size="12" font-family="monospace">processingStatus</text><text x="96" y="378" font-size="12" font-family="monospace">deliveryStatus</text><text x="96" y="404" font-size="12" font-family="monospace">deliveryAttemptCount</text><text x="96" y="430" font-size="12" font-family="monospace">updatedAt</text><text x="96" y="456" font-size="12" font-family="monospace">expiresAt</text><text x="200" y="495" class="sub">One durable record per correlationId</text></g>
+  <path d="M385 535H515" class="flow"/>
+
+  <!-- Processing owner -->
+  <g transform="translate(1025 180)"><rect class="card" width="370" height="245"/><image href="assets/aws/lambda.svg" x="26" y="22" width="64" height="64"/><text x="235" y="48" class="service">Worker Lambda</text><text x="235" y="70" class="sub">Updates processingStatus</text><line x1="25" y1="105" x2="345" y2="105" stroke="#dfe1e6"/><text x="45" y="134" class="small">RECEIVED</text><text x="160" y="134" class="small">PROCESSING</text><text x="275" y="134" class="small">SUCCEEDED</text><text x="45" y="162" class="small">VALIDATION_FAILED</text><text x="190" y="162" class="small">PROCESSING_FAILED</text><text x="315" y="162" class="small">DLQ</text><rect x="45" y="187" width="280" height="34" rx="17" fill="#deebff"/><text x="185" y="209" class="service" fill="#0052cc">Worker owns processingStatus</text></g>
+  <path d="M1025 302H965" class="flow"/>
+
+  <!-- Delivery owner -->
+  <g transform="translate(1025 465)"><rect class="card" width="370" height="255"/><image href="assets/aws/lambda.svg" x="26" y="20" width="64" height="64"/><text x="235" y="44" class="service">Outbound Response Lambda</text><text x="235" y="67" class="sub">Updates deliveryStatus</text><line x1="25" y1="100" x2="345" y2="100" stroke="#dfe1e6"/><text x="45" y="128" class="small">NOT_STARTED</text><text x="160" y="128" class="small">PENDING</text><text x="250" y="128" class="small">RETRYING</text><text x="45" y="154" class="small">DELIVERED</text><text x="145" y="154" class="small">DELIVERY_FAILED</text><text x="280" y="154" class="small">NOT_REQUIRED</text><text x="45" y="185" class="tiny">Also updates: deliveryAttemptCount • HTTP status • delivery timestamp</text><rect x="35" y="202" width="300" height="34" rx="17" fill="#deebff"/><text x="185" y="224" class="service" fill="#0052cc">Outbound Lambda owns deliveryStatus</text></g>
+  <path d="M1025 590H965" class="flow"/>
+
+  <!-- Terminal states -->
+  <g transform="translate(1490 190)"><rect width="165" height="90" rx="11" fill="#e3fcef" stroke="#00875a" stroke-width="2" filter="url(#shadow)"/><text x="83" y="40" class="service">Successfully</text><text x="83" y="60" class="service">Processed</text></g>
+  <g transform="translate(1680 190)"><rect width="165" height="90" rx="11" fill="#e3fcef" stroke="#00875a" stroke-width="2" filter="url(#shadow)"/><text x="83" y="40" class="service">Successfully</text><text x="83" y="60" class="service">Delivered</text></g>
+  <g transform="translate(1490 330)"><rect width="165" height="90" rx="11" fill="#ffebe6" stroke="#de350b" stroke-width="2" filter="url(#shadow)"/><text x="83" y="50" class="service">Validation Failed</text></g>
+  <g transform="translate(1680 330)"><rect width="165" height="90" rx="11" fill="#ffebe6" stroke="#de350b" stroke-width="2" filter="url(#shadow)"/><text x="83" y="50" class="service">Processing Failed</text></g>
+  <g transform="translate(1490 470)"><rect width="165" height="90" rx="11" fill="#fff0b3" stroke="#ff991f" stroke-width="2" filter="url(#shadow)"/><text x="83" y="40" class="service">Dead Letter</text><text x="83" y="60" class="service">Queue</text></g>
+  <g transform="translate(1680 470)"><rect width="165" height="90" rx="11" fill="#fff0b3" stroke="#ff991f" stroke-width="2" filter="url(#shadow)"/><text x="83" y="40" class="service">Manual</text><text x="83" y="60" class="service">Intervention</text></g>
+  <path d="M1395 280H1450V235H1490" class="success"/><path d="M1395 540H1440V235H1680" class="success"/>
+  <path d="M1395 320H1460V375H1490" class="failure"/><path d="M1395 350H1660V375H1680" class="failure"/>
+  <path d="M1395 390H1450V515H1490" class="failure"/><path d="M1395 640H1660V515H1680" class="failure"/>
+  <text x="1668" y="620" class="sub">Terminal outcomes remain traceable</text>
+
+  <!-- Independent dimensions table -->
+  <rect x="35" y="790" width="1190" height="245" rx="14" fill="#f7f9fc" stroke="#0052cc" stroke-width="1.5"/>
+  <rect x="35" y="790" width="1190" height="42" rx="14" fill="#b3d4ff"/><text x="55" y="817" class="header">INDEPENDENT STATUS DIMENSIONS</text>
+  <g transform="translate(65 852)"><rect width="520" height="145" rx="9" fill="#fff" stroke="#c1c7d0"/><rect width="520" height="31" rx="9" fill="#deebff"/><text x="135" y="21" font-size="12" font-weight="700">Processing Status</text><text x="390" y="21" font-size="12" font-weight="700">Delivery Status</text><line x1="260" y1="0" x2="260" y2="145" stroke="#c1c7d0"/><text x="25" y="53" class="tiny">RECEIVED</text><text x="285" y="53" class="tiny">NOT_STARTED</text><text x="25" y="72" class="tiny">PROCESSING</text><text x="285" y="72" class="tiny">NOT_STARTED</text><text x="25" y="91" class="tiny">SUCCEEDED</text><text x="285" y="91" class="tiny">PENDING</text><text x="25" y="110" class="tiny">SUCCEEDED</text><text x="285" y="110" class="tiny">DELIVERED / DELIVERY_FAILED</text><text x="25" y="129" class="tiny">FAILED / DLQ</text><text x="285" y="129" class="tiny">NOT_REQUIRED / FAILED</text></g>
+  <g transform="translate(625 852)"><rect width="565" height="145" rx="9" fill="#fff" stroke="#dfe1e6"/><text x="28" y="42" font-size="14" font-weight="700">Processing ≠ Delivery</text><text x="28" y="72" class="small">Processing and delivery are tracked independently,</text><text x="28" y="94" class="small">so successful processing does not imply successful delivery.</text><text x="28" y="122" class="tiny">This distinction supports accurate retries, investigation and recovery.</text></g>
+
+  <!-- Benefits -->
+  <rect x="1250" y="790" width="635" height="245" rx="14" fill="#232f3e"/>
+  <text x="1280" y="825" font-size="15" font-weight="700" class="benefitHead">KEY ARCHITECTURAL BENEFITS</text>
+  <text x="1280" y="863" font-size="12" class="benefit">• Durable lifecycle tracking</text>
+  <text x="1280" y="896" font-size="12" class="benefit">• End-to-end request correlation</text>
+  <text x="1280" y="929" font-size="12" class="benefit">• Independent processing and delivery status</text>
+  <text x="1585" y="863" font-size="12" class="benefit">• Supports retries and DLQs</text>
+  <text x="1585" y="896" font-size="12" class="benefit">• Complete operational visibility</text>
+  <text x="1585" y="929" font-size="12" class="benefit">• No message disappears without trace</text>
+  <text x="1585" y="982" font-size="11" class="benefit">TTL provides controlled lifecycle retention.</text>
+  <text x="1875" y="1068" text-anchor="end" font-size="10" fill="#7a869a">AWS Architecture Icons • message lifecycle view</text>
+</svg>

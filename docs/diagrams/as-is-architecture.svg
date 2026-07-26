@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1920" height="1080" viewBox="0 0 1920 1080">
+  <defs>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#091e42" flood-opacity=".16"/></filter>
+    <marker id="blue" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#0052cc"/></marker>
+    <marker id="purple" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#6554c0"/></marker>
+    <marker id="orange" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#ff8b00"/></marker>
+    <marker id="green" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#00875a"/></marker>
+    <marker id="gray" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#6b778c"/></marker>
+    <style>
+      text{font-family:Arial,"Helvetica Neue",sans-serif;fill:#172b4d}.header{font-size:15px;font-weight:700;letter-spacing:.4px}.service{font-size:14px;font-weight:700;text-anchor:middle}.sub{font-size:11px;fill:#5e6c84;text-anchor:middle}.small{font-size:11px;fill:#42526e}.card{fill:#fff;stroke:#dfe1e6;stroke-width:1.5;rx:11;filter:url(#shadow)}.biBlue{fill:none;stroke:#0052cc;stroke-width:3;marker-start:url(#blue);marker-end:url(#blue)}.biPurple{fill:none;stroke:#6554c0;stroke-width:3;marker-start:url(#purple);marker-end:url(#purple)}.biOrange{fill:none;stroke:#ff8b00;stroke-width:3;marker-start:url(#orange);marker-end:url(#orange)}.oneGreen{fill:none;stroke:#00875a;stroke-width:3;marker-end:url(#green)}.manual{fill:none;stroke:#6b778c;stroke-width:2.5;stroke-dasharray:8 6;marker-end:url(#gray)}.challenge{fill:#dfe1e6}.challengeHead{fill:#fff}
+    </style>
+  </defs>
+  <rect width="1920" height="1080" fill="#fff"/>
+  <text x="44" y="50" font-size="30" font-weight="700">AS-IS Architecture</text>
+  <text x="44" y="78" font-size="14" fill="#5e6c84">Current legacy logistics integration environment before modernization</text>
+
+  <!-- Section frames -->
+  <rect x="35" y="110" width="390" height="710" rx="14" fill="#f7f9fc" stroke="#0052cc" stroke-width="1.5"/>
+  <rect x="35" y="110" width="390" height="42" rx="14" fill="#b3d4ff"/><text x="55" y="137" class="header">EXTERNAL PARTNERS AND USERS</text>
+  <rect x="470" y="110" width="980" height="710" rx="14" fill="#f7f9fc" stroke="#0052cc" stroke-width="1.5"/>
+  <rect x="470" y="110" width="980" height="42" rx="14" fill="#b3d4ff"/><text x="490" y="137" class="header">ABC WAREHOUSING &amp; LOGISTICS · LEGACY CORE</text>
+  <rect x="1495" y="110" width="390" height="710" rx="14" fill="#f7f9fc" stroke="#0052cc" stroke-width="1.5"/>
+  <rect x="1495" y="110" width="390" height="42" rx="14" fill="#b3d4ff"/><text x="1515" y="137" class="header">INTERNAL CONSUMERS</text>
+
+  <!-- Left actors -->
+  <g transform="translate(80 190)"><rect class="card" width="300" height="145"/><circle cx="62" cy="72" r="35" fill="#deebff"/><path d="M44 79c4-17 32-17 36 0M62 65a10 10 0 1 0 0-20 10 10 0 0 0 0 20" fill="none" stroke="#0052cc" stroke-width="3"/><text x="205" y="56" class="service">External Logistics Partner A</text><text x="205" y="82" class="sub">(JSON REST API)</text><rect x="144" y="101" width="122" height="25" rx="12" fill="#deebff"/><text x="205" y="118" class="sub" fill="#0052cc">Custom Integration</text></g>
+  <g transform="translate(80 390)"><rect class="card" width="300" height="145"/><circle cx="62" cy="72" r="35" fill="#eae6ff"/><path d="M44 79c4-17 32-17 36 0M62 65a10 10 0 1 0 0-20 10 10 0 0 0 0 20" fill="none" stroke="#6554c0" stroke-width="3"/><text x="205" y="56" class="service">External Logistics Partner B</text><text x="205" y="82" class="sub">(XML API)</text><rect x="144" y="101" width="122" height="25" rx="12" fill="#eae6ff"/><text x="205" y="118" class="sub">Custom Integration</text></g>
+  <g transform="translate(80 635)"><rect class="card" width="300" height="120"/><circle cx="62" cy="60" r="32" fill="#fff0b3"/><path d="M44 66c4-16 31-16 35 0M62 53a10 10 0 1 0 0-20 10 10 0 0 0 0 20" fill="none" stroke="#ff8b00" stroke-width="3"/><text x="205" y="52" class="service">Legacy OMS Users</text><text x="205" y="76" class="sub">Synchronous user workflows</text></g>
+
+  <!-- Legacy core -->
+  <rect x="610" y="205" width="700" height="520" rx="18" fill="#fff" stroke="#7a869a" stroke-width="3" filter="url(#shadow)"/>
+  <rect x="610" y="205" width="700" height="55" rx="18" fill="#ebecf0"/><text x="960" y="240" class="service" font-size="20">ABC Warehousing &amp; Logistics</text>
+  <g transform="translate(680 305)"><rect width="560" height="175" rx="13" fill="#fff" stroke="#de350b" stroke-width="3" filter="url(#shadow)"/><circle cx="90" cy="87" r="48" fill="#ffebe6"/><path d="M59 70h62v50H59zm9 9h44m-44 13h44m-44 13h28" fill="none" stroke="#de350b" stroke-width="4"/><text x="360" y="66" class="service" font-size="20">Legacy OMS</text><text x="360" y="94" class="sub" font-size="13">Monolithic order and shipment management</text><text x="360" y="125" class="sub">Partner-specific adapters embedded in the core</text></g>
+  <g transform="translate(680 540)"><rect class="card" width="250" height="125"/><circle cx="62" cy="61" r="37" fill="#deebff"/><path d="M42 43c0-8 40-8 40 0v35c0 8-40 8-40 0zm0 0c0 8 40 8 40 0m-40 17c0 8 40 8 40 0" fill="none" stroke="#0052cc" stroke-width="3"/><text x="172" y="53" class="service">Shipment Database</text><text x="172" y="77" class="sub">Shared transactional store</text></g>
+  <g transform="translate(990 540)"><rect class="card" width="250" height="125"/><circle cx="62" cy="61" r="37" fill="#fff0b3"/><path d="M42 61h40M62 41v40M49 48l26 26M75 48L49 74" stroke="#ff8b00" stroke-width="3"/><text x="172" y="53" class="service">Business Logic</text><text x="172" y="77" class="sub">Tightly coupled workflows</text></g>
+  <path d="M960 480V515H805V540" class="manual"/><path d="M960 515H1115V540" class="manual"/>
+
+  <!-- Right consumers -->
+  <g transform="translate(1540 190)"><rect class="card" width="300" height="140"/><circle cx="62" cy="70" r="35" fill="#deebff"/><path d="M43 74c0-10 8-16 16-16 3-10 21-10 24 3 11 0 12 15 2 18H51c-5 0-8-2-8-5z" fill="none" stroke="#0052cc" stroke-width="3"/><text x="205" y="57" class="service">Existing AWS Workloads</text><text x="205" y="83" class="sub">Direct custom integration</text></g>
+  <g transform="translate(1540 410)"><rect class="card" width="300" height="140"/><circle cx="62" cy="70" r="35" fill="#e3fcef"/><path d="M42 91V70m14 21V54m14 37V63m14 28V44" stroke="#00875a" stroke-width="6"/><text x="205" y="57" class="service">Reporting</text><text x="205" y="83" class="sub">Reads from Shipment Database</text></g>
+  <g transform="translate(1540 635)"><rect class="card" width="300" height="120"/><circle cx="62" cy="60" r="33" fill="#ffebe6"/><path d="M45 42h34v36H45zm6 8h22m-22 9h22m-22 9h15" fill="none" stroke="#de350b" stroke-width="2.5"/><text x="205" y="50" class="service">Manual Operations</text><text x="205" y="74" class="sub">Investigation and reconciliation</text></g>
+
+  <!-- Point-to-point connections -->
+  <path d="M380 262H530V350H680" class="biBlue"/><text x="500" y="245" class="small">JSON · Custom Integration</text>
+  <path d="M380 462H560V405H680" class="biPurple"/><text x="505" y="485" class="small">XML · Partner-specific logic</text>
+  <path d="M380 695H590V445H680" class="biOrange"/><text x="470" y="678" class="small">Synchronous communication</text>
+  <path d="M1240 350H1400V260H1540" class="biOrange"/><text x="1340" y="334" class="small">Custom Integration</text>
+  <path d="M930 602H1460V480H1540" class="oneGreen"/><text x="1270" y="585" class="small">Direct database reporting</text>
+  <path d="M1240 440H1430V695H1540" class="manual"/><text x="1320" y="683" class="small">Manual support</text>
+
+  <!-- Architecture callouts -->
+  <g transform="translate(475 745)"><rect width="220" height="50" rx="25" fill="#ffebe6" stroke="#de350b"/><text x="110" y="31" class="service">Custom code per partner</text></g>
+  <g transform="translate(720 745)"><rect width="210" height="50" rx="25" fill="#ffebe6" stroke="#de350b"/><text x="105" y="31" class="service">No canonical model</text></g>
+  <g transform="translate(955 745)"><rect width="225" height="50" rx="25" fill="#ffebe6" stroke="#de350b"/><text x="113" y="31" class="service">No asynchronous processing</text></g>
+  <g transform="translate(1205 745)"><rect width="220" height="50" rx="25" fill="#ffebe6" stroke="#de350b"/><text x="110" y="31" class="service">No centralized monitoring</text></g>
+
+  <!-- Challenges -->
+  <rect x="35" y="850" width="1850" height="185" rx="14" fill="#232f3e"/>
+  <text x="65" y="885" font-size="15" font-weight="700" class="challengeHead">CURRENT CHALLENGES</text>
+  <text x="65" y="924" font-size="12" class="challenge">• Point-to-point integrations</text><text x="65" y="956" font-size="12" class="challenge">• Tight coupling</text><text x="65" y="988" font-size="12" class="challenge">• Partner-specific logic duplicated</text>
+  <text x="430" y="924" font-size="12" class="challenge">• Limited scalability</text><text x="430" y="956" font-size="12" class="challenge">• Manual operational visibility</text><text x="430" y="988" font-size="12" class="challenge">• No centralized event routing</text>
+  <text x="795" y="924" font-size="12" class="challenge">• Difficult partner onboarding</text><text x="795" y="956" font-size="12" class="challenge">• No durable message tracking</text><text x="795" y="988" font-size="12" class="challenge">• Limited analytics capability</text>
+  <text x="1190" y="924" font-size="12" class="challenge">• Changes require modifications across</text><text x="1207" y="946" font-size="12" class="challenge">multiple integrations</text><text x="1190" y="988" font-size="12" class="challenge">• Failures are difficult to trace end to end</text>
+  <text x="1875" y="1068" text-anchor="end" font-size="10" fill="#7a869a">Legacy integration landscape • current-state view</text>
+</svg>

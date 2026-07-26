@@ -1,0 +1,8 @@
+<Shipment>
+    <eventType>CreateShipment</eventType>
+    <eventSource>PartnerA</eventSource>
+    <timestamp>2026-07-21T10:00:00Z</timestamp>
+    <shipmentId>SHIP-2001</shipmentId>
+    <customer>ABC Retail</customer>
+    <destination>Sydney</destination>
+</Shipment>

@@ -1,0 +1,11 @@
+{
+  "eventId": "evt-002",
+  "correlationId": "corr-002",
+  "eventType": "UpdateShipmentStatus",
+  "eventSource": "PartnerA",
+  "timestamp": "2026-07-21T10:05:00Z",
+  "payload": {
+    "shipmentId": "SHIP-1001",
+    "status": "IN_TRANSIT"
+  }
+}

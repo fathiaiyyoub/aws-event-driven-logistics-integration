@@ -1,0 +1,8 @@
+{
+  "body": "{\"eventType\":\"CreateShipment\",\"eventSource\":\"partner-001\",\"payload\":{\"shipmentId\":\"SHP-10001\",\"customer\":\"Test Customer\",\"destination\":\"Melbourne\"}}",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "httpMethod": "POST",
+  "path": "/shipments"
+}

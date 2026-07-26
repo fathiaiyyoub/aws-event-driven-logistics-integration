@@ -1,0 +1,20 @@
+{
+  "partnerId": {
+    "S": "partner-001"
+  },
+  "enabled": {
+    "BOOL": true
+  },
+  "deliveryMethod": {
+    "S": "HTTPS_WEBHOOK"
+  },
+  "endpointUrl": {
+    "S": "https://webhook.site/87c7c0f1-b3fc-4fa8-acea-2ffdeeaffbaf"
+  },
+  "messageFormat": {
+    "S": "JSON"
+  },
+  "timeoutSeconds": {
+    "N": "10"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "run_id": "20260724-085746",
+  "endpoint": "https://aewn7dnfek.execute-api.ap-southeast-2.amazonaws.com/dev/shipments",
+  "partner_id": "partner-001",
+  "requests_sent": 150,
+  "concurrency": 10,
+  "accepted_202": 150,
+  "failed": 0,
+  "acceptance_rate_percent": 100.0,
+  "elapsed_seconds": 3.86,
+  "average_requests_per_second": 38.83,
+  "minimum_duration_ms": 94.29,
+  "average_duration_ms": 241.49,
+  "median_duration_ms": 123.33,
+  "maximum_duration_ms": 1758.97,
+  "status_counts": {
+    "202": 150
+  }
+}
