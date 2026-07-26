@@ -9,7 +9,7 @@
 | **Infrastructure as Code** | Terraform |
 | **Primary Language** | Python |
 | **Project Status** | Completed |
-| **Author** | Fathi Ayyoub |
+| **Author** | Fathi Aiyyoub |
 
 ---
 
