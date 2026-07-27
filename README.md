@@ -413,6 +413,10 @@ In addition to processing business transactions, the platform was validated to e
 
 Processed integration events were streamed to Amazon S3 using Amazon Data Firehose, catalogued by AWS Glue, and queried through Amazon Athena. This pipeline provides a historical record of integration activity that can support operational reporting, troubleshooting, auditing, and business analytics.
 
+The following diagram illustrates the analytics pipeline implemented as part of the solution.
+
+![Analytics Pipeline](docs/diagrams/Analytics%20Pipeline.png)
+
 The following screenshots demonstrate the successful ingestion, cataloguing, and querying of integration data.
 
 The processed integration events were successfully delivered to the Amazon S3 data lake.
@@ -426,6 +430,7 @@ AWS Glue successfully catalogued the dataset, making it available for analytical
 Amazon Athena successfully queried the stored integration events, confirming that the analytics pipeline was operating correctly from data ingestion through to query execution.
 
 ![Screenshot #06 – Amazon Athena Query Results for Integration Events](screenshots/Screenshot%20%2306%20%E2%80%93%20Amazon%20Athena%20Query%20Results%20for%20Integration%20Events.png)
+
 ## 8.4 Performance Validation
 
 Following the refinement of the API Gateway throttling configuration described in Section 7.5, the platform was subjected to a final controlled load test to confirm its behaviour under concurrent requests.
