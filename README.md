@@ -271,3 +271,49 @@ This refinement removed any dependency on the original client connection and ena
 ![Screenshot #15 – Internal Event Successfully Published to EventBridge](screenshots/Screenshot%20%2315%20%E2%80%93%20Internal%20Event%20Successfully%20Published%20to%20EventBridge.png)
 
 ![Screenshot #16 – External Webhook Callback from Internal Event](screenshots/Screenshot%20%2316%20%E2%80%93%20External%20Webhook%20Callback%20from%20Internal%20Event.png)
+
+## 7.3 Refining Message State Management
+
+The platform was originally designed to maintain the lifecycle of every integration request in a dedicated DynamoDB table. As implementation progressed, additional testing highlighted that a single message status was not sufficient to accurately represent asynchronous processing.
+
+In particular, a shipment could be processed successfully by the Worker Lambda while the subsequent webhook delivery failed or required multiple retry attempts. Recording both outcomes under a single status made it difficult to determine whether a transaction had failed during business processing or during response delivery.
+
+The data model was therefore refined by separating message state into two independent attributes: **processingStatus** and **deliveryStatus**. The Worker Lambda became responsible for updating the processing status, while the Response Lambda independently managed delivery status together with delivery attempts and related metadata.
+
+This refinement provided a more accurate representation of each transaction throughout its lifecycle, enabling operational teams to distinguish processing outcomes from delivery outcomes and simplifying monitoring, troubleshooting, and retry management without changing the overall architecture.
+
+**Before**
+
+```json
+{
+  "correlationId": "abc123",
+  "status": "SUCCESS"
+}
+```
+
+**After**
+
+```json
+{
+  "correlationId": "abc123",
+  "processingStatus": "COMPLETED",
+  "deliveryStatus": "FAILED",
+  "deliveryAttempts": 3
+}
+```
+
+## 7.4 Optimising Partner Credential Retrieval
+
+Supporting webhook-based response delivery required the platform to securely manage partner credentials without embedding sensitive information in the application code or configuration.
+
+AWS Secrets Manager was selected to store sensitive partner credentials, while the **PartnerConfiguration** table maintained references to the appropriate secret for each integration partner. During implementation, consideration was given to the long-term operational behaviour of the solution, particularly the impact of repeatedly retrieving the same secret for every outbound response.
+
+To reduce latency, lower the number of Secrets Manager API calls, and minimise operational costs, the solution was refined to use the **AWS Parameters and Secrets Lambda Extension**. The extension caches retrieved secrets within the Lambda execution environment, allowing subsequent invocations to reuse cached credentials while automatically refreshing them after the configured cache period.
+
+The Response Lambda was updated to retrieve partner credentials through the local extension endpoint rather than calling the Secrets Manager service directly. This change was transparent to the business logic while improving performance and reducing the number of external API requests during periods of sustained message processing.
+
+```python
+secret = get_secret(secret_name)
+```
+
+By introducing local secret caching, the solution retained the security benefits of AWS Secrets Manager while improving the efficiency of outbound response processing.
