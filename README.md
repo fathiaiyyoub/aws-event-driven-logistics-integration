@@ -223,6 +223,7 @@ The final design therefore separates the message lifecycle into two independent 
 This distinction provides a more accurate operational view of the integration platform, simplifies troubleshooting, supports retry logic, and enables independent monitoring of processing and delivery activities.
 
 ![DynamoDB Message Lifecycle](docs/diagrams/DynamoDB%20Message%20Lifecycle.png)
+![Screenshot #08 – DynamoDB Integration Message Lifecycle State](screenshots/Screenshot%20%2308%20%E2%80%93%20DynamoDB%20Integration%20Message%20Lifecycle%20State.png)
 
 # 6. Final Solution Architecture
 
