@@ -46,3 +46,126 @@ Rather than replacing the existing Order Management System, the objective was to
 The following diagram illustrates the existing integration landscape prior to modernisation.
 
 ![AS-IS Architecture](docs/diagrams/AS-IS%20Architecture.png)
+
+# 3. The Problem
+
+The existing integration model created several technical and operational limitations.
+
+## 3.1 Point-to-Point Coupling
+
+The legacy OMS communicated directly with individual logistics partners. Each integration depended on partner-specific endpoints, message formats, authentication methods, and processing logic.
+
+As the number of partners increased, the OMS became responsible for managing an expanding collection of custom interfaces. Changes to one partner integration could require modifications to the central business system, increasing regression risk and slowing future onboarding.
+
+## 3.2 Inconsistent Message Formats
+
+External partners did not use a common data format. Some exchanged JSON payloads, while others used XML or different field structures for equivalent business transactions.
+
+Without a canonical message model, transformation logic was duplicated across integrations. This made validation inconsistent and increased the effort required to support new partners.
+
+## 3.3 Synchronous Processing Dependencies
+
+Direct integration encouraged synchronous communication between systems. The initiating system could become dependent on downstream processing time, partner availability, or network connectivity.
+
+This created several risks:
+
+- Temporary partner outages could affect internal processing.
+- Long-running shipment operations could not be represented reliably through a single synchronous request.
+- Retry behaviour was difficult to coordinate.
+- Failures could propagate across system boundaries.
+
+## 3.4 Limited End-to-End Visibility
+
+The existing model did not provide a consistent mechanism for tracking a message across its complete journey.
+
+It was difficult to answer operational questions such as:
+
+- Was the request accepted?
+- Was it transformed successfully?
+- Was the business operation processed?
+- Was the response delivered to the partner?
+- How many delivery attempts were made?
+- Did the message enter a dead-letter queue?
+
+The absence of durable correlation and lifecycle tracking made troubleshooting slower and increased reliance on individual application logs.
+
+## 3.5 Partner Configuration and Credential Management
+
+Partner-specific endpoint details and authentication credentials required a secure and maintainable storage model.
+
+Storing configuration directly in application code or environment variables would create deployment coupling, while storing the same callback information against every message would introduce duplication and unnecessary data growth.
+
+The platform therefore needed to separate:
+
+- non-sensitive partner configuration,
+- sensitive credentials,
+- per-message processing state.
+
+## 3.6 Limited Operational Analytics
+
+The existing environment did not provide a central analytics capability for integration events.
+
+The organisation required a way to retain message activity for operational analysis, including:
+
+- request volumes,
+- processing outcomes,
+- partner activity,
+- response delivery status,
+- failure trends,
+- performance observations.
+
+## 3.7 Infrastructure Consistency
+
+A manually configured integration environment would be difficult to reproduce, review, and maintain.
+
+The solution required Infrastructure as Code so that the AWS environment could be:
+
+- version controlled,
+- reviewed,
+- deployed consistently,
+- tested,
+- destroyed after validation,
+- recreated when required.
+
+# 4. Solution Objectives
+
+The primary objective of this project was to modernise the organisation's integration layer without replacing the existing Order Management System. The solution focuses on introducing cloud-native integration capabilities while preserving existing business applications and minimising operational disruption.
+
+The architecture was designed to achieve the following objectives:
+
+- Decouple internal business systems from external logistics partners through an event-driven architecture.
+- Standardise message exchange using a canonical data model regardless of partner-specific formats.
+- Support multiple partner integrations while minimising the effort required to onboard additional partners.
+- Enable asynchronous processing for long-running business operations without blocking client requests.
+- Provide durable end-to-end message tracking across the entire processing lifecycle.
+- Securely manage partner credentials and configuration using managed AWS services.
+- Improve resilience through managed messaging, retry mechanisms, and dead-letter queues.
+- Capture integration events for operational reporting and analytical workloads.
+- Deploy the complete AWS environment using Infrastructure as Code (Terraform) to ensure consistency, repeatability, and version control.
+- Demonstrate the solution using AWS Well-Architected design principles while remaining appropriate for a portfolio-scale implementation.
+
+These objectives guided every architectural decision throughout the project. Rather than selecting AWS services first, the architecture evolved by addressing specific business and technical challenges encountered during implementation.
+
+# 5. Architecture Journey
+
+One of the objectives of this repository is to document not only the final solution, but also how the architecture evolved throughout the implementation.
+
+The initial design addressed the business requirements at a high level, however several implementation challenges emerged during deployment, testing, and validation. Rather than treating these as isolated issues, each became an opportunity to refine the architecture and adopt a more robust solution.
+
+The final platform is therefore the result of multiple architectural iterations, each improving scalability, maintainability, security, or operational visibility.
+
+The following sections describe the most significant design decisions and the reasoning behind them.
+
+---
+
+## 5.1 Moving from Point-to-Point Integration to Event-Driven Processing
+
+The first architectural decision was to eliminate direct dependencies between the Order Management System and downstream processing components.
+
+Instead of invoking processing logic directly, incoming business requests are published as events. This allows producers and consumers to evolve independently while enabling additional services to subscribe to the same business events without modifying the originating application.
+
+Amazon EventBridge became the central event router responsible for distributing business events throughout the integration platform.
+
+This approach significantly reduced coupling, improved extensibility, and established a foundation for asynchronous processing.
+
+![High-Level Solution Architecture](docs/diagrams/AWS%20Solution%20Architecture%20Diagram%20(high-level).png)
