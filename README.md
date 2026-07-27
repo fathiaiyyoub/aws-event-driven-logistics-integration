@@ -377,15 +377,13 @@ The Retrieve Shipment endpoint successfully returned the requested shipment deta
 
 ### Update Shipment Status
 
-Shipment status updates were accepted through the API and processed successfully, demonstrating support for long-running business operations beyond the initial shipment creation.
+Shipment status updates were accepted and processed successfully, demonstrating support for long-running business operations beyond the initial shipment creation. After the shipment status changed internally, an event was published and delivered asynchronously to the originating partner through the configured webhook.
 
-> **No matching screenshot currently exists in the repository.**
+![Screenshot #16 – External Webhook Callback from Internal Event](screenshots/Screenshot%20%2316%20%E2%80%93%20External%20Webhook%20Callback%20from%20Internal%20Event.png)
 
-The updated shipment status was successfully processed by the Worker Lambda.
+The `IntegrationMessageState` table recorded the updated processing and delivery status, providing end-to-end visibility of the transaction lifecycle and confirming successful completion of the asynchronous workflow.
 
-> **No matching screenshot currently exists in the repository.**
-
-The `IntegrationMessageState` table recorded the updated processing information, confirming successful tracking of the transaction lifecycle.
+![Screenshot #08 – DynamoDB Integration Message Lifecycle State](screenshots/Screenshot%20%2308%20%E2%80%93%20DynamoDB%20Integration%20Message%20Lifecycle%20State.png)
 
 ![Screenshot #08 – DynamoDB Integration Message Lifecycle State](screenshots/Screenshot%20%2308%20%E2%80%93%20DynamoDB%20Integration%20Message%20Lifecycle%20State.png)
 
