@@ -549,7 +549,64 @@ The following enhancements would be recommended for a production implementation.
 
 Although these capabilities were outside the scope of this project, the implemented architecture provides a solid foundation on which they can be introduced without significant architectural changes.
 
-# 11. Conclusion
+# 11. Deployment
+
+The solution was deployed entirely using **Terraform**, providing a repeatable and consistent deployment process for all AWS resources. Infrastructure as Code (IaC) ensured that networking, security, compute, integration services, analytics, monitoring, and supporting resources were provisioned from a single source of truth.
+
+Terraform also simplified iterative development throughout the project. As architectural refinements were introduced, infrastructure changes could be applied consistently without manual reconfiguration, reducing deployment errors and maintaining alignment between the implementation and the intended architecture.
+
+## Infrastructure as Code
+
+The infrastructure was organised into logical Terraform configuration files, each responsible for a specific area of the solution.
+
+| Terraform Configuration | Purpose |
+|--------------------------|---------|
+| `network.tf` | VPC, subnets, routing, NAT Gateway and VPC networking |
+| `security.tf` | Security Groups and networking controls |
+| `iam.tf` | IAM roles and permissions for AWS services |
+| `lambda.tf` | Deployment of Lambda functions and execution roles |
+| `apigateway.tf` | REST API, resources, methods, integrations and API keys |
+| `eventbridge.tf` | EventBridge event bus, rules and targets |
+| `sqs.tf` | Processing queues and dead-letter queues |
+| `dynamodb.tf` | Partner configuration and message state tables |
+| `firehose.tf` | Event delivery into Amazon S3 |
+| `glue.tf` | Glue database, crawler and Data Catalog |
+| `athena.tf` | Athena workgroup and analytics configuration |
+| `cloudwatch.tf` | Log groups and monitoring resources |
+| `cloudtrail.tf` | API auditing and account activity logging |
+| `outputs.tf` | Deployment outputs including API endpoints and resource identifiers |
+
+## Deployment Workflow
+
+The infrastructure followed a standard Terraform deployment lifecycle.
+
+1. Initialise the working directory and required providers.
+2. Validate the Terraform configuration.
+3. Review the execution plan.
+4. Deploy the infrastructure to AWS.
+5. Validate the deployed resources through functional and end-to-end testing.
+6. Destroy the environment when testing was complete to minimise ongoing AWS costs.
+
+```bash
+terraform init
+terraform validate
+terraform plan
+terraform apply
+```
+
+After successful testing, the entire environment could be removed using:
+
+```bash
+terraform destroy
+```
+
+## Deployment Validation
+
+Following deployment, each component was verified before end-to-end testing commenced. Validation included confirming successful resource creation, API Gateway availability, Lambda execution, EventBridge routing, SQS message flow, DynamoDB persistence, outbound webhook delivery, and the analytics pipeline from Amazon S3 through AWS Glue to Amazon Athena.
+
+This deployment approach ensured that the complete platform could be recreated consistently while supporting iterative improvements throughout the implementation lifecycle.
+
+# 12. Conclusion
 
 This project demonstrates the design, implementation, and validation of a modern event-driven integration platform that transforms a tightly coupled legacy environment into a scalable, serverless architecture using AWS managed services.
 
