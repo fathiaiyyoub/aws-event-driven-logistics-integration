@@ -245,7 +245,7 @@ The following architecture diagram provides a high-level view of the completed A
 
 While the architecture diagram illustrates the logical structure of the platform, the following sequence diagram demonstrates how a typical business transaction flows through the solution, from the initial API request to asynchronous processing and final partner callback.
 
-![End-to-End Sequence Diagram](docs/diagrams/End-to-End%20Sequence%20Diagram.png)
+![End-to-End Request Processing Sequence](docs/diagrams/End-to-End%20Request%20Processing%20Sequence.png)
 
 # 7. Engineering Challenges
 
