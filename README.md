@@ -45,4 +45,4 @@ Rather than replacing the existing Order Management System, the objective was to
 
 The following diagram illustrates the existing integration landscape prior to modernisation.
 
-![AS-IS Architecture](docs/AS-IS%20Architecture.png)
+![AS-IS Architecture](docs/diagrams/AS-IS%20Architecture.png)
