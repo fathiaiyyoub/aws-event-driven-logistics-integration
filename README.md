@@ -329,7 +329,6 @@ Several options were considered, including introducing Amazon SQS before the Ada
 Instead, the API Gateway throttling configuration was adjusted to support the planned workload while preserving the existing architecture. A second controlled load test was then executed using 150 concurrent requests, all of which were accepted and processed successfully.
 
 The exercise demonstrated that the platform could sustain the required workload without requiring additional architectural components. It also reinforced the importance of validating infrastructure configuration alongside application behaviour, as platform limits can influence system performance independently of the application itself.
-
 ![Screenshot #18 – CloudWatch Metrics Summary](screenshots/Screenshot%20%2318%20%E2%80%93%20CloudWatch%20Metrics%20Summary.png)
 
 
