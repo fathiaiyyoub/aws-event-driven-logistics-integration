@@ -361,13 +361,13 @@ A shipment creation request was submitted through Amazon API Gateway and success
 
 ![Screenshot #01 – Create Shipment Request Accepted](screenshots/Screenshot%20%2301%20%E2%80%93%20Create%20Shipment%20Request%20Accepted.png)
 
-The request was transformed into the canonical event model and published to Amazon EventBridge for downstream processing.
+The request was transformed into the canonical event model and published to Amazon EventBridge, enabling asynchronous processing by downstream services while decoupling the API layer from backend processing.
 
-> **No matching screenshot currently exists in the repository.**
+![Screenshot #15 – Internal Event Successfully Published to EventBridge](screenshots/Screenshot%20%2315%20%E2%80%93%20Internal%20Event%20Successfully%20Published%20to%20EventBridge.png)
 
-The Worker Lambda processed the request and stored the shipment information successfully.
+The Worker Lambda processed the event successfully and recorded the transaction state in the `IntegrationMessageState` DynamoDB table, providing durable lifecycle tracking and operational visibility.
 
-> **No matching screenshot currently exists in the repository.**
+![Screenshot #03 – Successful Message State in DynamoDB](screenshots/Screenshot%20%2303%20%E2%80%93%20Successful%20Message%20State%20in%20DynamoDB.png)
 
 ### Retrieve Shipment
 
