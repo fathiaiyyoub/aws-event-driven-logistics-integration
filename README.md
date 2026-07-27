@@ -223,3 +223,38 @@ The final design therefore separates the message lifecycle into two independent 
 This distinction provides a more accurate operational view of the integration platform, simplifies troubleshooting, supports retry logic, and enables independent monitoring of processing and delivery activities.
 
 ![DynamoDB Message Lifecycle](docs/diagrams/DynamoDB%20Message%20Lifecycle.png)
+
+# 6. Final Solution Architecture
+
+The completed solution implements a fully serverless, event-driven integration platform using managed AWS services. Each component has a clearly defined responsibility, allowing the platform to scale independently, reduce operational overhead, and simplify future partner onboarding.
+
+At a high level, incoming requests are accepted through Amazon API Gateway and processed by an Adapter Lambda responsible for request validation, format detection, and transformation into the canonical data model. Business events are then published to Amazon EventBridge, which routes them to downstream consumers without introducing direct dependencies between services.
+
+Amazon SQS provides durable buffering between processing stages, enabling asynchronous execution, retry handling, and failure isolation. The Worker Lambda performs business processing before publishing a completion event back to EventBridge, allowing subsequent response delivery to remain fully decoupled from the original request.
+
+Outbound partner notifications are handled by the Response Lambda, which retrieves the appropriate partner configuration, securely accesses credentials from AWS Secrets Manager using the Parameters and Secrets Lambda Extension cache, and delivers business updates via HTTPS webhooks.
+
+Operational visibility is provided through a combination of DynamoDB, Amazon CloudWatch, Amazon S3, AWS Glue, Amazon Athena, and Amazon QuickSight. Together, these services provide durable message tracking, centralised logging, historical event storage, interactive querying, and business reporting.
+
+The following diagram illustrates the completed solution architecture.
+
+![AWS Solution Architecture](docs/diagrams/AWS%20Solution%20Architecture%20Diagram%20(high-level).png)
+
+# 7. Engineering Challenges
+
+Following the successful deployment of the solution, implementation and end-to-end testing confirmed that the overall architecture met its original design objectives. At the same time, practical experience highlighted several opportunities to refine specific implementation decisions and strengthen the solution.
+
+These refinements did not alter the overall architecture or its event-driven design. Instead, they improved areas such as component responsibilities, operational efficiency, message tracking, security, and performance based on observations made during deployment and validation.
+
+The following sections describe the most significant architectural enhancements introduced after deployment and explain the reasoning behind each refinement.
+
+## 7.1 Restoring the Intended API Gateway Boundary
+
+The original architecture assigned responsibility for request parsing, content-type handling, validation, and canonical transformation to the Inbound Adapter Lambda. During implementation, however, the API Gateway was still configured with non-proxy (`AWS`) Lambda integrations and Velocity Template Language (VTL) mapping templates. These templates parsed incoming requests, reshaped payloads into the canonical structure, and used `passthrough_behavior = "NEVER"` before invoking the Adapter Lambda.
+
+Although the solution functioned correctly, this implementation conflicted with the original architectural intent by placing part of the integration logic in the API layer rather than the Adapter.
+
+To restore the intended separation of responsibilities, the Terraform configuration was updated to replace the custom Lambda integrations with Lambda proxy (`AWS_PROXY`) integrations for the Create Shipment, Update Shipment Status, and Retrieve Shipment endpoints. The VTL mapping templates were removed, and the Adapter Lambda was enhanced to receive and process the complete API Gateway request, including content-type detection, JSON/XML parsing, request validation, and canonical event construction. :contentReference[oaicite:0]{index=0}
+
+This refinement simplified the API Gateway configuration while ensuring that all integration-specific logic remained within a single component. API Gateway now focuses solely on transport concerns such as authentication, throttling, routing, and request forwarding, while the Adapter Lambda owns all protocol and message transformation responsibilities.
+
