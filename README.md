@@ -320,15 +320,25 @@ By introducing local secret caching, the solution retained the security benefits
 
 ## 7.5 Validating Platform Behaviour Under Load
 
-Following functional validation, the platform was subjected to controlled load testing to evaluate its behaviour under concurrent request volumes.
+After functional testing was completed, a controlled end-to-end load test was performed using 150 requests with a concurrency level of 10.
 
-The initial test produced a significant number of HTTP 429 (Too Many Requests) responses. Investigation showed that these requests were being rejected by the API Gateway Usage Plan before they entered the event-driven processing pipeline. The underlying architecture continued to operate as designed, but the configured throttling limits did not reflect the intended testing scenario.
+The first test produced numerous HTTP `429 Too Many Requests` responses. Investigation confirmed that API Gateway was rejecting requests before they entered the event-driven processing pipeline because the Usage Plan was configured with a burst limit of 20 requests and a steady-state rate limit of 10 requests per second.
 
-Several options were considered, including introducing Amazon SQS before the Adapter Lambda to absorb request bursts. Although technically feasible, this would have increased architectural complexity without providing sufficient value for the scope of this portfolio implementation.
+![Screenshot #12 – Controlled End-to-End Load Test Execution and API Gateway Throttling Results](screenshots/Screenshot%20%2312%20%E2%80%93%20Controlled%20End-to-End%20Load%20Test%20Execution%20and%20API%20Gateway%20Throttling%20Results.png)
 
-Instead, the API Gateway throttling configuration was adjusted to support the planned workload while preserving the existing architecture. A second controlled load test was then executed using 150 concurrent requests, all of which were accepted and processed successfully.
+The throttling configuration in Terraform was then adjusted by increasing the burst capacity from 20 to 200 while retaining the rate limit of 10 requests per second.
 
-The exercise demonstrated that the platform could sustain the required workload without requiring additional architectural components. It also reinforced the importance of validating infrastructure configuration alongside application behaviour, as platform limits can influence system performance independently of the application itself.
-![Screenshot #18 – CloudWatch Metrics Summary](screenshots/Screenshot%20%2318%20%E2%80%93%20CloudWatch%20Metrics%20Summary.png)
+```hcl
+throttle_settings {
+  burst_limit = 200
+  rate_limit  = 100
+}
+```
+
+The same controlled test was repeated after applying the updated configuration. All 150 requests were accepted with HTTP `202 Accepted` responses, completing in approximately 3.86 seconds with an average response time of approximately 241 milliseconds.
+
+![Screenshot #13 – Controlled Load Test Results (150 Requests, Concurrency 10)](screenshots/Screenshot%20%2313%20%E2%80%93%20Controlled%20Load%20Test%20Results%20%28150%20Requests%2C%20Concurrency%2010%29.png)
+
+This test demonstrated that API Gateway throttling must be configured in line with the expected traffic profile. It also confirmed that the asynchronous processing architecture could accept the planned request volume without introducing additional components or changing the wider solution design.
 
 
