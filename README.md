@@ -317,3 +317,19 @@ secret = get_secret(secret_name)
 ```
 
 By introducing local secret caching, the solution retained the security benefits of AWS Secrets Manager while improving the efficiency of outbound response processing.
+
+## 7.5 Validating Platform Behaviour Under Load
+
+Following functional validation, the platform was subjected to controlled load testing to evaluate its behaviour under concurrent request volumes.
+
+The initial test produced a significant number of HTTP 429 (Too Many Requests) responses. Investigation showed that these requests were being rejected by the API Gateway Usage Plan before they entered the event-driven processing pipeline. The underlying architecture continued to operate as designed, but the configured throttling limits did not reflect the intended testing scenario.
+
+Several options were considered, including introducing Amazon SQS before the Adapter Lambda to absorb request bursts. Although technically feasible, this would have increased architectural complexity without providing sufficient value for the scope of this portfolio implementation.
+
+Instead, the API Gateway throttling configuration was adjusted to support the planned workload while preserving the existing architecture. A second controlled load test was then executed using 150 concurrent requests, all of which were accepted and processed successfully.
+
+The exercise demonstrated that the platform could sustain the required workload without requiring additional architectural components. It also reinforced the importance of validating infrastructure configuration alongside application behaviour, as platform limits can influence system performance independently of the application itself.
+
+![Screenshot #18 – CloudWatch Metrics Summary](screenshots/Screenshot%20%2318%20%E2%80%93%20CloudWatch%20Metrics%20Summary.png)
+
+
