@@ -169,3 +169,57 @@ Amazon EventBridge became the central event router responsible for distributing 
 This approach significantly reduced coupling, improved extensibility, and established a foundation for asynchronous processing.
 
 ![High-Level Solution Architecture](docs/diagrams/AWS%20Solution%20Architecture%20Diagram%20(high-level).png)
+
+## 5.2 Designing a Canonical Data Model
+
+A key design objective was to isolate internal business processing from partner-specific message formats.
+
+External logistics providers were expected to exchange information using different payload structures and serialization formats, primarily JSON and XML. Allowing these differences to propagate throughout the platform would tightly couple business logic to individual partner implementations and significantly increase the effort required to support new integrations.
+
+To address this, the solution adopts a canonical JSON data model as the internal representation of all business transactions. The inbound Adapter Lambda is responsible for validating incoming requests, detecting the source format, and transforming the payload into the canonical model before publishing it to Amazon EventBridge.
+
+From this point onwards, every downstream component—including the Worker Lambda, operational analytics pipeline, and response processing logic—operates exclusively on the canonical representation. Partner-specific transformations occur only at the integration boundaries, where the outbound Adapter converts the canonical message into the format required by the destination partner.
+
+This approach centralises transformation logic, simplifies downstream processing, reduces duplication, and allows additional partners to be onboarded with minimal impact on the core integration platform.
+
+## 5.3 Supporting Long-Running Business Processes
+
+Creating a shipment is only the beginning of its lifecycle. As a shipment progresses through fulfilment, transport, and delivery, multiple business events may occur long after the original API request has completed.
+
+A synchronous request-response model is therefore unsuitable for representing the complete business process. Once the initial request is accepted, subsequent status updates must be delivered independently of the originating client request.
+
+To support this requirement, the platform separates request processing from response delivery. After completing the required business logic, the Worker Lambda publishes a business event to Amazon EventBridge rather than communicating directly with external partners. EventBridge routes the event to a dedicated response queue, where the Response Lambda retrieves the appropriate partner configuration and delivers the status update using an HTTPS webhook.
+
+This event-driven callback model enables shipment updates to originate from any authorised business process rather than only from the original API request. It also removes direct dependencies between processing and outbound delivery, allowing each stage to scale, retry, and recover independently while maintaining a complete audit trail of the transaction lifecycle.
+
+![End-to-End Request and Callback Flow](docs/diagrams/End-to-End%20Request%20and%20Callback%20Flow.png)
+
+## 5.4 Managing Partner Configuration Securely
+
+Integrating with multiple external partners requires more than message transformation. Each partner may expose different endpoints, authentication methods, certificates, API keys, or webhook URLs that must be managed securely and independently of application code.
+
+To achieve this, the solution separates partner configuration into two distinct categories:
+
+- **Non-sensitive configuration**, such as endpoint URLs and integration settings, is stored in a dedicated DynamoDB PartnerConfiguration table.
+- **Sensitive credentials**, including API keys and authentication secrets, are stored in AWS Secrets Manager.
+
+Rather than retrieving secrets directly from AWS Secrets Manager during every invocation, the Response Lambda uses the AWS Parameters and Secrets Lambda Extension. This extension caches secrets within warm Lambda execution environments, significantly reducing latency, API calls, and operational costs while maintaining secure access to partner credentials.
+
+This separation of responsibilities provides a scalable configuration model that simplifies partner onboarding, supports credential rotation, and keeps sensitive information isolated from application logic.
+
+## 5.5 Providing End-to-End Message Visibility
+
+Enterprise integration platforms require more than reliable message processing—they also need comprehensive operational visibility. Every business transaction should be traceable from initial acceptance through processing and final delivery.
+
+To support this requirement, the platform maintains a durable integration message record for every transaction using Amazon DynamoDB. Each message is assigned a unique correlation identifier that enables all processing stages to be linked together regardless of where they occur within the architecture.
+
+During implementation, it became apparent that a single status field was insufficient to accurately represent the lifecycle of a message. A shipment could be processed successfully while the subsequent webhook delivery failed due to a temporary partner outage. Recording both outcomes under a single status introduced ambiguity.
+
+The final design therefore separates the message lifecycle into two independent dimensions:
+
+- **Processing Status**, representing the outcome of business processing performed by the Worker Lambda.
+- **Delivery Status**, representing the outcome of outbound webhook delivery performed by the Response Lambda.
+
+This distinction provides a more accurate operational view of the integration platform, simplifies troubleshooting, supports retry logic, and enables independent monitoring of processing and delivery activities.
+
+![DynamoDB Message Lifecycle](docs/diagrams/DynamoDB%20Message%20Lifecycle.png)
