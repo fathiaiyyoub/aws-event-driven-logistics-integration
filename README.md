@@ -371,9 +371,9 @@ The Worker Lambda processed the event successfully and recorded the transaction 
 
 ### Retrieve Shipment
 
-The Retrieve Shipment endpoint successfully returned the requested shipment details using the stored shipment identifier.
+The Retrieve Shipment endpoint successfully returned the requested shipment details using the stored shipment identifier. The response demonstrates that the platform can retrieve shipment information from the canonical data model regardless of the original inbound message format.
 
-> **No matching screenshot currently exists in the repository.**
+![Screenshot #11 – JSON Format Retrieval of Shipment Created from an XML Integration Request](screenshots/Screenshot%20%2311%20%E2%80%93%20JSON%20Format%20Retrieval%20of%20Shipment%20Created%20from%20an%20XML%20Integration%20Request.png)
 
 ### Update Shipment Status
 
