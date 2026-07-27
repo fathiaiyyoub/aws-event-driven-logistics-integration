@@ -326,7 +326,7 @@ The first test produced numerous HTTP `429 Too Many Requests` responses. Investi
 
 ![Screenshot #12 – Controlled End-to-End Load Test Execution and API Gateway Throttling Results](screenshots/Screenshot%20%2312%20%E2%80%93%20Controlled%20End-to-End%20Load%20Test%20Execution%20and%20API%20Gateway%20Throttling%20Results.png)
 
-The throttling configuration in Terraform was then adjusted by increasing the burst capacity from 20 to 200 while retaining the rate limit of 10 requests per second.
+The throttling configuration in Terraform was then adjusted by increasing the burst limit from 20 to 200 and the rate limit from 10 to 100 requests per second.
 
 ```hcl
 throttle_settings {
@@ -341,4 +341,228 @@ The same controlled test was repeated after applying the updated configuration. 
 
 This test demonstrated that API Gateway throttling must be configured in line with the expected traffic profile. It also confirmed that the asynchronous processing architecture could accept the planned request volume without introducing additional components or changing the wider solution design.
 
+# 8. Solution Validation
 
+The completed solution was validated through a series of functional, integration, and performance tests designed to verify both the implementation and the architectural objectives of the project.
+
+Rather than testing individual AWS services in isolation, the validation process followed complete business transactions as they progressed through the event-driven workflow—from the initial API request to asynchronous processing, response delivery, and operational reporting.
+
+The following sections summarise the key validation activities and demonstrate that the implemented solution performs as expected under normal operating conditions.
+
+## 8.1 Functional Validation
+
+Functional testing confirmed that each API endpoint performed its intended business function and that requests were successfully processed throughout the event-driven workflow.
+
+The tests verified request acceptance, payload validation, asynchronous processing, data persistence, and response generation for the primary business operations supported by the platform.
+
+### Create Shipment
+
+A shipment creation request was submitted through Amazon API Gateway and successfully accepted for asynchronous processing.
+
+![Screenshot #01 – Create Shipment Request](screenshots/Screenshot%20%2301%20%E2%80%93%20Create%20Shipment%20Request.png)
+
+---
+
+The request was transformed into the canonical event model and published to Amazon EventBridge for downstream processing.
+
+![Screenshot #02 – Canonical Event Published to EventBridge](screenshots/Screenshot%20%2302%20%E2%80%93%20Canonical%20Event%20Published%20to%20EventBridge.png)
+
+---
+
+The Worker Lambda processed the request and stored the shipment information successfully.
+
+![Screenshot #03 – Worker Lambda Successfully Processed Shipment](screenshots/Screenshot%20%2303%20%E2%80%93%20Worker%20Lambda%20Successfully%20Processed%20Shipment.png)
+
+### Retrieve Shipment
+
+The Retrieve Shipment endpoint successfully returned the requested shipment details using the stored shipment identifier.
+
+![Screenshot #04 – Retrieve Shipment Request](screenshots/Screenshot%20%2304%20%E2%80%93%20Retrieve%20Shipment%20Request.png)
+
+### Update Shipment Status
+
+Shipment status updates were accepted through the API and processed successfully, demonstrating support for long-running business operations beyond the initial shipment creation.
+
+![Screenshot #05 – Update Shipment Status Request](screenshots/Screenshot%20%2305%20%E2%80%93%20Update%20Shipment%20Status%20Request.png)
+
+---
+
+The updated shipment status was successfully processed by the Worker Lambda.
+
+![Screenshot #06 – Shipment Status Successfully Updated](screenshots/Screenshot%20%2306%20%E2%80%93%20Shipment%20Status%20Successfully%20Updated.png)
+
+---
+
+The IntegrationMessageState table recorded the updated processing information, confirming successful tracking of the transaction lifecycle.
+
+![Screenshot #07 – Updated Integration Message State](screenshots/Screenshot%20%2307%20%E2%80%93%20Updated%20Integration%20Message%20State.png)
+
+## 8.2 End-to-End Event Processing
+
+Beyond validating individual API operations, end-to-end testing verified that business events were successfully propagated through the complete event-driven architecture.
+
+After the Worker Lambda completed business processing, a shipment status event was published to Amazon EventBridge. The event was then routed to the outbound processing pipeline, where the Response Lambda retrieved the appropriate partner configuration and delivered the business response to the originating partner using an HTTPS webhook.
+
+This validation confirmed that the platform correctly supports asynchronous business processes, allowing responses to be delivered independently of the original client request while maintaining message correlation throughout the transaction lifecycle.
+
+![Screenshot #15 – Internal Event Successfully Published to EventBridge](screenshots/Screenshot%20%2315%20%E2%80%93%20Internal%20Event%20Successfully%20Published%20to%20EventBridge.png)
+
+---
+
+The corresponding webhook callback was successfully received by the external endpoint, confirming completion of the end-to-end processing workflow.
+
+![Screenshot #16 – External Webhook Callback from Internal Event](screenshots/Screenshot%20%2316%20%E2%80%93%20External%20Webhook%20Callback%20from%20Internal%20Event.png)
+
+## 8.3 Analytics Validation
+
+In addition to processing business transactions, the platform was validated to ensure that operational events were successfully captured for reporting and analysis.
+
+Processed integration events were streamed to Amazon S3 using Amazon Data Firehose, catalogued by AWS Glue, and queried through Amazon Athena. This pipeline provides a historical record of integration activity that can support operational reporting, troubleshooting, auditing, and business analytics.
+
+The following screenshots demonstrate the successful ingestion, cataloguing, and querying of integration data.
+
+The processed integration events were successfully delivered to the Amazon S3 data lake.
+
+![Screenshot #09 – Integration Events Stored in Amazon S3](screenshots/Screenshot%20%2309%20%E2%80%93%20Integration%20Events%20Stored%20in%20Amazon%20S3.png)
+
+---
+
+AWS Glue successfully catalogued the dataset, making it available for analytical queries.
+
+![Screenshot #10 – AWS Glue Data Catalog](screenshots/Screenshot%20%2310%20%E2%80%93%20AWS%20Glue%20Data%20Catalog.png)
+
+---
+
+Amazon Athena successfully queried the stored integration events, confirming that the analytics pipeline was operating correctly from data ingestion through to query execution.
+
+![Screenshot #11 – Amazon Athena Query Results](screenshots/Screenshot%20%2311%20%E2%80%93%20Amazon%20Athena%20Query%20Results.png)
+
+## 8.4 Performance Validation
+
+Following the refinement of the API Gateway throttling configuration described in Section 7.5, the platform was subjected to a final controlled load test to confirm its behaviour under concurrent requests.
+
+The validation consisted of 150 requests with a concurrency level of 10. All requests were accepted with HTTP `202 Accepted` responses and entered the asynchronous processing pipeline successfully. The test completed in approximately 3.86 seconds with an average response time of approximately 241 milliseconds.
+
+These results confirmed that the deployed configuration was capable of supporting the planned workload while preserving the responsiveness of the API and the scalability benefits of the event-driven architecture.
+
+![Screenshot #13 – Controlled Load Test Results (150 Requests, Concurrency 10)](screenshots/Screenshot%20%2313%20%E2%80%93%20Controlled%20Load%20Test%20Results%20%28150%20Requests%2C%20Concurrency%2010%29.png)
+
+# 9. Lessons Learned
+
+This project provided valuable practical experience in designing, implementing, and validating an enterprise integration platform using AWS managed services. While the original architecture met its intended objectives, the implementation process reinforced several important architectural principles that will influence future solution designs.
+
+## 9.1 Clearly Define Component Responsibilities
+
+One of the most important lessons was the value of maintaining clear boundaries between architectural components. Although the initial implementation was functional, reviewing the deployed solution revealed that API Gateway was performing part of the request transformation through VTL mapping templates. Moving this responsibility entirely into the Adapter Lambda restored the intended separation of concerns and produced a cleaner, more maintainable solution.
+
+## 9.2 Design for Long-Running Business Processes
+
+Enterprise integrations rarely end when an API request returns a response. Supporting asynchronous business processes required the platform to maintain sufficient information to deliver business outcomes long after the original request had completed. Separating partner configuration from message state and using webhook callbacks provided a flexible approach that can accommodate additional partners and extended business workflows.
+
+## 9.3 Operational Visibility Is Part of the Architecture
+
+Tracking the lifecycle of integration messages proved to be just as important as processing them. Refining the message model to distinguish processing outcomes from delivery outcomes provided greater operational clarity and simplified monitoring, troubleshooting, and retry management.
+
+## 9.4 Infrastructure Configuration Requires Validation
+
+Load testing demonstrated that infrastructure configuration can significantly influence application behaviour. The initial HTTP 429 responses were caused by API Gateway throttling rather than limitations in the event-driven architecture itself. Validating the deployed infrastructure under realistic workloads was therefore as important as validating the application logic.
+
+## 9.5 Security and Performance Must Be Considered Together
+
+Protecting sensitive partner credentials was essential, but security should not unnecessarily reduce operational efficiency. Combining AWS Secrets Manager with the AWS Parameters and Secrets Lambda Extension allowed the platform to maintain strong security while reducing repeated secret retrievals, improving response times, and lowering operational overhead.
+
+These lessons reinforced that successful solution architecture extends beyond selecting AWS services. Careful allocation of responsibilities, continuous validation, and iterative refinement are equally important in delivering solutions that remain scalable, maintainable, and operationally effective.
+
+# 10. Production Considerations
+
+The solution presented in this repository demonstrates a production-oriented architecture implemented within the scope of a portfolio project. While the core design principles are suitable for enterprise integration workloads, a production deployment would typically introduce additional operational, security, and governance capabilities based on organisational requirements.
+
+The following enhancements would be considered for a production implementation.
+
+## High Availability and Disaster Recovery
+
+- Deploy the solution across multiple AWS Regions to provide business continuity for regional outages.
+- Replicate DynamoDB tables using Global Tables where cross-region resilience is required.
+- Implement regional failover for API endpoints using Amazon Route 53 health checks and routing policies.
+
+## Security
+
+- Enable AWS WAF to protect public API endpoints against common web exploits.
+- Apply AWS Shield Advanced where additional DDoS protection is required.
+- Introduce fine-grained IAM policies and regular credential rotation.
+- Encrypt all data using customer-managed AWS KMS keys where organisational policies require additional control.
+
+## Observability
+
+- Expand CloudWatch dashboards and alarms for business and operational metrics.
+- Configure Amazon EventBridge rules for operational notifications.
+- Integrate with incident management platforms such as AWS Systems Manager Incident Manager, PagerDuty, or ServiceNow where appropriate.
+
+## Operational Excellence
+
+- Implement CI/CD pipelines to automate infrastructure deployment and application releases.
+- Introduce automated integration and regression testing as part of the deployment pipeline.
+- Apply Infrastructure as Code validation, security scanning, and policy compliance checks before deployment.
+
+## Analytics
+
+- Extend the analytics platform by connecting Amazon QuickSight to Athena datasets to provide operational dashboards for business users and support teams.
+- Introduce long-term trend analysis, KPI reporting, and executive dashboards using the historical integration data stored in Amazon S3.
+
+Although these capabilities were outside the scope of this project, the implemented architecture provides a solid foundation on which they can be incorporated without requiring significant structural changes.
+
+# 10. Production Considerations
+
+The solution presented in this repository demonstrates an enterprise-oriented integration platform implemented within the scope of a portfolio project. While the architecture successfully satisfies the defined business and technical requirements, a production deployment would typically incorporate additional capabilities to meet organisational standards for availability, security, operations, and governance.
+
+The following enhancements would be recommended for a production implementation.
+
+## High Availability and Disaster Recovery
+
+- Deploy the solution across multiple AWS Regions to improve resilience against regional failures.
+- Replicate DynamoDB tables using Amazon DynamoDB Global Tables where business continuity requirements justify cross-region data replication.
+- Configure Amazon Route 53 health checks and failover routing to automatically redirect traffic during regional outages.
+
+## Security
+
+- Protect public API endpoints using AWS WAF to mitigate common web attacks.
+- Enable AWS Shield Advanced where enhanced DDoS protection is required.
+- Apply least-privilege IAM policies and implement regular credential rotation.
+- Use customer-managed AWS KMS keys where organisational security policies require additional control over encryption.
+
+## Observability
+
+- Expand Amazon CloudWatch dashboards and alarms to monitor application health and business metrics.
+- Configure automated operational notifications using Amazon EventBridge.
+- Integrate with enterprise incident management platforms such as AWS Systems Manager Incident Manager, ServiceNow, or PagerDuty where required.
+
+## DevOps and Governance
+
+- Implement CI/CD pipelines to automate infrastructure deployment and application releases.
+- Introduce automated testing, infrastructure validation, and security scanning as part of the deployment pipeline.
+- Apply governance controls to ensure Infrastructure as Code complies with organisational standards before deployment.
+
+## Analytics
+
+- Extend the analytics capability by integrating Amazon QuickSight with Amazon Athena to provide operational dashboards and business reporting.
+- Develop dashboards for integration throughput, processing performance, delivery success rates, and long-term operational trends.
+
+Although these capabilities were outside the scope of this project, the implemented architecture provides a solid foundation on which they can be introduced without significant architectural changes.
+
+# 11. Conclusion
+
+This project demonstrates the design, implementation, and validation of a modern event-driven integration platform that transforms a tightly coupled legacy environment into a scalable, serverless architecture using AWS managed services.
+
+The solution applies cloud-native design principles to support heterogeneous partner integrations, asynchronous business processes, secure partner communication, operational analytics, and Infrastructure as Code. Throughout the implementation, architectural decisions were continuously validated through deployment, testing, and targeted refinements to ensure that the final solution aligned with its original design objectives.
+
+Beyond delivering a working implementation, this project provided valuable experience in translating business requirements into technical architecture, balancing functional and non-functional requirements, and applying iterative improvements based on practical implementation outcomes.
+
+The repository contains the complete Terraform configuration, Lambda source code, architecture diagrams, validation artefacts, and supporting documentation, providing a comprehensive reference for the design and implementation of the solution.
+
+# Responsible Use of AI
+
+This project was developed using a combination of hands-on engineering and responsible use of generative AI as a technical assistant.
+
+AI tools were used to explore architectural alternatives, review implementation approaches, refine Infrastructure as Code, improve technical documentation, and challenge design decisions throughout the project. All architectural decisions, implementation changes, infrastructure deployment, testing, troubleshooting, validation, and final documentation were personally reviewed, verified, and completed by the author.
+
+The project reflects my practical understanding of AWS cloud architecture, serverless integration, Infrastructure as Code, and event-driven system design. AI accelerated research and documentation activities, while responsibility for the final solution, technical accuracy, and engineering outcomes remained entirely my own.
