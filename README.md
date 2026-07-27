@@ -403,7 +403,7 @@ The corresponding webhook callback was successfully received by the external end
 
 ![Screenshot #16 – External Webhook Callback from Internal Event](screenshots/Screenshot%20%2316%20%E2%80%93%20External%20Webhook%20Callback%20from%20Internal%20Event.png)
 
-## 8.3 Analytics Validation
+### 8.3 Analytics Validation
 
 In addition to processing business transactions, the platform was validated to ensure that operational events were successfully captured for reporting and analysis.
 
@@ -413,20 +413,15 @@ The following screenshots demonstrate the successful ingestion, cataloguing, and
 
 The processed integration events were successfully delivered to the Amazon S3 data lake.
 
-![Screenshot #09 – Integration Events Stored in Amazon S3](screenshots/Screenshot%20%2309%20%E2%80%93%20Integration%20Events%20Stored%20in%20Amazon%20S3.png)
-
----
+![Screenshot #04 – Integration Event Archived to S3 in Parquet Format](screenshots/Screenshot%20%2304%20%E2%80%93%20Integration%20Event%20Archived%20to%20S3%20in%20Parquet%20Format.png)
 
 AWS Glue successfully catalogued the dataset, making it available for analytical queries.
 
-![Screenshot #10 – AWS Glue Data Catalog](screenshots/Screenshot%20%2310%20%E2%80%93%20AWS%20Glue%20Data%20Catalog.png)
-
----
+![Screenshot #05 – Integration Event Archived to S3 in Parquet Format](screenshots/Screenshot%20%2305%20%E2%80%93%20Integration%20Event%20Archived%20to%20S3%20in%20Parquet%20Format.png)
 
 Amazon Athena successfully queried the stored integration events, confirming that the analytics pipeline was operating correctly from data ingestion through to query execution.
 
-![Screenshot #11 – Amazon Athena Query Results](screenshots/Screenshot%20%2311%20%E2%80%93%20Amazon%20Athena%20Query%20Results.png)
-
+![Screenshot #06 – Amazon Athena Query Results for Integration Events](screenshots/Screenshot%20%2306%20%E2%80%93%20Amazon%20Athena%20Query%20Results%20for%20Integration%20Events.png)
 ## 8.4 Performance Validation
 
 Following the refinement of the API Gateway throttling configuration described in Section 7.5, the platform was subjected to a final controlled load test to confirm its behaviour under concurrent requests.
