@@ -239,9 +239,13 @@ Outbound partner notifications are handled by the Response Lambda, which retriev
 
 Operational visibility is provided through a combination of DynamoDB, Amazon CloudWatch, Amazon S3, AWS Glue, Amazon Athena, and Amazon QuickSight. Together, these services provide durable message tracking, centralised logging, historical event storage, interactive querying, and business reporting.
 
-The following diagram illustrates the completed solution architecture.
+The following architecture diagram provides a high-level view of the completed AWS solution and the interactions between its major components.
 
 ![AWS Solution Architecture](docs/diagrams/AWS%20Solution%20Architecture%20Diagram%20(high-level).png)
+
+While the architecture diagram illustrates the logical structure of the platform, the following sequence diagram demonstrates how a typical business transaction flows through the solution, from the initial API request to asynchronous processing and final partner callback.
+
+![End-to-End Sequence Diagram](docs/diagrams/End-to-End%20Sequence%20Diagram.png)
 
 # 7. Engineering Challenges
 
@@ -387,8 +391,6 @@ The `IntegrationMessageState` table recorded the updated processing and delivery
 
 ![Screenshot #08 – DynamoDB Integration Message Lifecycle State](screenshots/Screenshot%20%2308%20%E2%80%93%20DynamoDB%20Integration%20Message%20Lifecycle%20State.png)
 
-![Screenshot #08 – DynamoDB Integration Message Lifecycle State](screenshots/Screenshot%20%2308%20%E2%80%93%20DynamoDB%20Integration%20Message%20Lifecycle%20State.png)
-
 ## 8.2 End-to-End Event Processing
 
 Beyond validating individual API operations, end-to-end testing verified that business events were successfully propagated through the complete event-driven architecture.
@@ -459,44 +461,6 @@ Load testing demonstrated that infrastructure configuration can significantly in
 Protecting sensitive partner credentials was essential, but security should not unnecessarily reduce operational efficiency. Combining AWS Secrets Manager with the AWS Parameters and Secrets Lambda Extension allowed the platform to maintain strong security while reducing repeated secret retrievals, improving response times, and lowering operational overhead.
 
 These lessons reinforced that successful solution architecture extends beyond selecting AWS services. Careful allocation of responsibilities, continuous validation, and iterative refinement are equally important in delivering solutions that remain scalable, maintainable, and operationally effective.
-
-# 10. Production Considerations
-
-The solution presented in this repository demonstrates a production-oriented architecture implemented within the scope of a portfolio project. While the core design principles are suitable for enterprise integration workloads, a production deployment would typically introduce additional operational, security, and governance capabilities based on organisational requirements.
-
-The following enhancements would be considered for a production implementation.
-
-## High Availability and Disaster Recovery
-
-- Deploy the solution across multiple AWS Regions to provide business continuity for regional outages.
-- Replicate DynamoDB tables using Global Tables where cross-region resilience is required.
-- Implement regional failover for API endpoints using Amazon Route 53 health checks and routing policies.
-
-## Security
-
-- Enable AWS WAF to protect public API endpoints against common web exploits.
-- Apply AWS Shield Advanced where additional DDoS protection is required.
-- Introduce fine-grained IAM policies and regular credential rotation.
-- Encrypt all data using customer-managed AWS KMS keys where organisational policies require additional control.
-
-## Observability
-
-- Expand CloudWatch dashboards and alarms for business and operational metrics.
-- Configure Amazon EventBridge rules for operational notifications.
-- Integrate with incident management platforms such as AWS Systems Manager Incident Manager, PagerDuty, or ServiceNow where appropriate.
-
-## Operational Excellence
-
-- Implement CI/CD pipelines to automate infrastructure deployment and application releases.
-- Introduce automated integration and regression testing as part of the deployment pipeline.
-- Apply Infrastructure as Code validation, security scanning, and policy compliance checks before deployment.
-
-## Analytics
-
-- Extend the analytics platform by connecting Amazon QuickSight to Athena datasets to provide operational dashboards for business users and support teams.
-- Introduce long-term trend analysis, KPI reporting, and executive dashboards using the historical integration data stored in Amazon S3.
-
-Although these capabilities were outside the scope of this project, the implemented architecture provides a solid foundation on which they can be incorporated without requiring significant structural changes.
 
 # 10. Production Considerations
 
@@ -603,7 +567,7 @@ Beyond delivering a working implementation, this project provided valuable exper
 
 The repository contains the complete Terraform configuration, Lambda source code, architecture diagrams, validation artefacts, and supporting documentation, providing a comprehensive reference for the design and implementation of the solution.
 
-# Responsible Use of AI
+# 13. Responsible Use of AI
 
 This project was developed using a combination of hands-on engineering and responsible use of generative AI as a technical assistant.
 
