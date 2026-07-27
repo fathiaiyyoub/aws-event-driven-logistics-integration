@@ -258,3 +258,15 @@ To restore the intended separation of responsibilities, the Terraform configurat
 
 This refinement simplified the API Gateway configuration while ensuring that all integration-specific logic remained within a single component. API Gateway now focuses solely on transport concerns such as authentication, throttling, routing, and request forwarding, while the Adapter Lambda owns all protocol and message transformation responsibilities.
 
+## 7.2 Improving Long-Running Response Delivery
+
+The original response mechanism assumed that the information required to deliver a processing result would always be available when the Response Lambda was invoked. During implementation, it became apparent that this assumption was insufficient for long-running business processes.
+
+Shipment status updates may occur hours or even days after the original request has been accepted. By that time, the original HTTP request no longer exists, meaning the platform must independently determine where and how the response should be delivered.
+
+The solution was refined by separating partner configuration from message state. A dedicated **PartnerConfiguration** table was introduced to store non-sensitive partner information, including callback endpoints and references to partner credentials stored in AWS Secrets Manager. The Response Lambda now identifies the originating partner using the stored `partnerId`, retrieves the corresponding configuration from DynamoDB, securely obtains the required credentials through the AWS Parameters and Secrets Lambda Extension, and delivers the response to the appropriate webhook.
+
+This refinement removed any dependency on the original client connection and enabled the platform to support long-running asynchronous business processes while maintaining a consistent delivery mechanism for every partner. It also established a reusable pattern for onboarding additional integration partners without requiring changes to the application logic.
+![Screenshot #15 – Internal Event Successfully Published to EventBridge](screenshots/Screenshot%20%2315%20%E2%80%93%20Internal%20Event%20Successfully%20Published%20to%20EventBridge.png)
+
+![Screenshot #16 – External Webhook Callback from Internal Event](screenshots/Screenshot%20%2316%20%E2%80%93%20External%20Webhook%20Callback%20from%20Internal%20Event.png)
