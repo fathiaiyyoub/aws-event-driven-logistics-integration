@@ -359,43 +359,35 @@ The tests verified request acceptance, payload validation, asynchronous processi
 
 A shipment creation request was submitted through Amazon API Gateway and successfully accepted for asynchronous processing.
 
-![Screenshot #01 – Create Shipment Request](screenshots/Screenshot%20%2301%20%E2%80%93%20Create%20Shipment%20Request.png)
-
----
+![Screenshot #01 – Create Shipment Request Accepted](screenshots/Screenshot%20%2301%20%E2%80%93%20Create%20Shipment%20Request%20Accepted.png)
 
 The request was transformed into the canonical event model and published to Amazon EventBridge for downstream processing.
 
-![Screenshot #02 – Canonical Event Published to EventBridge](screenshots/Screenshot%20%2302%20%E2%80%93%20Canonical%20Event%20Published%20to%20EventBridge.png)
-
----
+> **No matching screenshot currently exists in the repository.**
 
 The Worker Lambda processed the request and stored the shipment information successfully.
 
-![Screenshot #03 – Worker Lambda Successfully Processed Shipment](screenshots/Screenshot%20%2303%20%E2%80%93%20Worker%20Lambda%20Successfully%20Processed%20Shipment.png)
+> **No matching screenshot currently exists in the repository.**
 
 ### Retrieve Shipment
 
 The Retrieve Shipment endpoint successfully returned the requested shipment details using the stored shipment identifier.
 
-![Screenshot #04 – Retrieve Shipment Request](screenshots/Screenshot%20%2304%20%E2%80%93%20Retrieve%20Shipment%20Request.png)
+> **No matching screenshot currently exists in the repository.**
 
 ### Update Shipment Status
 
 Shipment status updates were accepted through the API and processed successfully, demonstrating support for long-running business operations beyond the initial shipment creation.
 
-![Screenshot #05 – Update Shipment Status Request](screenshots/Screenshot%20%2305%20%E2%80%93%20Update%20Shipment%20Status%20Request.png)
-
----
+> **No matching screenshot currently exists in the repository.**
 
 The updated shipment status was successfully processed by the Worker Lambda.
 
-![Screenshot #06 – Shipment Status Successfully Updated](screenshots/Screenshot%20%2306%20%E2%80%93%20Shipment%20Status%20Successfully%20Updated.png)
+> **No matching screenshot currently exists in the repository.**
 
----
+The `IntegrationMessageState` table recorded the updated processing information, confirming successful tracking of the transaction lifecycle.
 
-The IntegrationMessageState table recorded the updated processing information, confirming successful tracking of the transaction lifecycle.
-
-![Screenshot #07 – Updated Integration Message State](screenshots/Screenshot%20%2307%20%E2%80%93%20Updated%20Integration%20Message%20State.png)
+![Screenshot #08 – DynamoDB Integration Message Lifecycle State](screenshots/Screenshot%20%2308%20%E2%80%93%20DynamoDB%20Integration%20Message%20Lifecycle%20State.png)
 
 ## 8.2 End-to-End Event Processing
 
