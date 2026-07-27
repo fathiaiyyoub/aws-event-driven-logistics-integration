@@ -13,14 +13,16 @@
 5. Architecture Journey
 6. Final Solution Architecture
 7. Engineering Challenges
-8. Deployment
-9. Testing and Validation
-10. Lessons Learned
-11. Production Considerations
-12. Repository Structure
-13. Acknowledgements
-14. Responsible Use of AI
-
+8. Solution Validation
+   - 8.1 Functional Validation
+   - 8.2 End-to-End Event Processing
+   - 8.3 Analytics Validation
+   - 8.4 Performance Validation
+9. Lessons Learned
+10. Production Considerations
+11. Deployment
+12. Conclusion
+13. Responsible Use of AI
 ---
 
 # 1. Introduction
