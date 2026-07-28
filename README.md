@@ -4,9 +4,22 @@
 
 ---
 
+This repository contains a complete AWS-based event-driven integration platform implementation with:
+
+- serverless adapter, worker, and response Lambda code in `lambdas/`
+- Terraform IaC definitions in `terraform/`
+- payload examples in `payloads/`
+- automated tests in `tests/`
+- architecture diagrams in `docs/diagrams/`
+- validation screenshots in `screenshots/`
+
 ## Table of Contents
 
 1. Introduction
+   - Overview
+   - Project Snapshot
+   - Prerequisites
+   - Getting Started
 2. Business Scenario
 3. The Problem
 4. Solution Objectives
@@ -34,6 +47,61 @@ This project demonstrates the design and implementation of a modern event-driven
 The platform standardises communication between systems using a canonical data model, enabling multiple logistics partners to exchange information regardless of their individual message formats or integration requirements. The solution also provides end-to-end message tracking, secure partner configuration management, operational analytics, and fully automated infrastructure deployment using Terraform.
 
 Unlike many portfolio projects that present only the final solution, this repository documents the complete engineering journey. It captures the architectural decisions, technical challenges, implementation refinements, and lessons learned while designing, deploying, testing, and validating the solution. The objective is not only to demonstrate the final architecture, but also to illustrate the reasoning behind the decisions that shaped it.
+
+## Overview
+
+This repository demonstrates a cloud-native, event-driven integration platform built for a legacy logistics use case. The implementation focuses on decoupling systems, supporting multiple partner formats, and preserving existing business workflows while improving resiliency and operations.
+
+## Project Snapshot
+
+- `lambdas/`: inbound adapter, worker, response processor, and shared common modules
+- `terraform/`: AWS infrastructure definitions for API Gateway, Lambda, EventBridge, SQS, DynamoDB, Firehose, Glue, Athena, and security
+- `payloads/`: example API request payloads and partner messages
+- `tests/`: unit and integration tests validating adapter, worker, response, and deployment behavior
+- `docs/diagrams/`: architecture diagrams referenced throughout the documentation
+- `screenshots/`: validation evidence for the implemented solution
+- `simulation/`: helper scripts to run local adapter, worker, and end-to-end scenarios
+
+## Prerequisites
+
+- Python 3.9+ or compatible runtime for local scripts and tests
+- Terraform 1.x for infrastructure deployment
+- AWS CLI configured with appropriate credentials and permissions
+- Access to an AWS account with permissions for Lambda, API Gateway, EventBridge, SQS, DynamoDB, Secrets Manager, Firehose, Glue, Athena, CloudWatch, and IAM
+
+## Getting Started
+
+1. Install Python dependencies:
+
+```bash
+pip install -r requirements.txt
+```
+
+2. Run the automated test suite:
+
+```bash
+pytest
+```
+
+3. Review example payloads in `payloads/` for API request structure.
+
+4. Deploy the infrastructure from `terraform/`:
+
+```bash
+cd terraform
+terraform init
+terraform validate
+terraform plan
+terraform apply
+```
+
+5. Use the deployed API Gateway endpoints and the event-driven pipeline to validate end-to-end behavior.
+
+6. Run the local end-to-end simulation to exercise the adapter and worker logic without AWS dependencies:
+
+```bash
+python simulation/run_end_to_end.py
+```
 
 # 2. Business Scenario
 
