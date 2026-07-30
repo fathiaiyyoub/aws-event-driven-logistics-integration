@@ -1,86 +1,104 @@
 # Modernizing a Legacy Logistics Platform through AWS Integration Services
 
+> **An end-to-end AWS Solution Architecture case study demonstrating the design, implementation, testing, and evolution of a serverless event-driven integration platform for a legacy logistics environment.**
+
+---
+
+This repository contains a complete AWS-based event-driven integration platform implementation with:
+
+- serverless adapter, worker, and response Lambda code in `lambdas/`
+- Terraform IaC definitions in `terraform/`
+- payload examples in `payloads/`
+- automated tests in `tests/`
+- architecture diagrams in `docs/diagrams/`
+- validation screenshots in `screenshots/`
+
+## Table of Contents
+
+1. Introduction
+   - Overview
+   - Project Snapshot
+   - Prerequisites
+   - Getting Started
+2. Business Scenario
+3. The Problem
+4. Solution Objectives
+5. Architecture Journey
+6. Final Solution Architecture
+7. Engineering Challenges
+8. Solution Validation
+   - 8.1 Functional Validation
+   - 8.2 End-to-End Event Processing
+   - 8.3 Analytics Validation
+   - 8.4 Performance Validation
+9. Lessons Learned
+10. Production Considerations
+11. Cost Analysis
+12. Deployment
+13. Conclusion
+14. Responsible Use of AI
+---
+
+# 1. Introduction
+
+Modernising enterprise integration platforms is rarely about replacing existing business systems. More often, it involves reducing complexity while allowing those systems to continue operating with minimal disruption.
+
+This project demonstrates the design and implementation of a modern event-driven integration platform on Amazon Web Services (AWS) for a legacy logistics environment. Instead of replacing the existing Order Management System (OMS), the solution introduces a cloud-native integration layer that decouples internal applications from external logistics partners through asynchronous messaging, serverless computing, and managed AWS services.
+
+The platform standardises communication between systems using a canonical data model, enabling multiple logistics partners to exchange information regardless of their individual message formats or integration requirements. The solution also provides end-to-end message tracking, secure partner configuration management, and operational analytics. The core AWS infrastructure is deployed automatically using Terraform, while the QuickSight visualisation layer was intentionally configured and tested manually through the AWS Console.
+
+Unlike many portfolio projects that present only the final solution, this repository documents the complete engineering journey. It captures the architectural decisions, technical challenges, implementation refinements, and lessons learned while designing, deploying, testing, and validating the solution. The objective is not only to demonstrate the final architecture, but also to illustrate the reasoning behind the decisions that shaped it.
+
 ## Overview
 
-This project demonstrates the modernization of a legacy logistics platform by designing and implementing an event-driven integration architecture on AWS.
+This repository demonstrates a cloud-native, event-driven integration platform built for a legacy logistics use case. The implementation focuses on decoupling systems, supporting multiple partner formats, and preserving existing business workflows while improving resiliency and operations.
 
-The solution decouples legacy systems and external partners through serverless integration services, enabling scalable, resilient, and extensible message processing while supporting multiple integration patterns.
+## Project Snapshot
 
----
+- `lambdas/`: inbound adapter, worker, response processor, and shared common modules
+- `terraform/`: AWS infrastructure definitions for API Gateway, Lambda, EventBridge, SQS, DynamoDB, Firehose, Glue, Athena, and security
+- `payloads/`: example API request payloads and partner messages
+- `tests/`: unit and integration tests validating adapter, worker, response, and deployment behavior
+- `docs/diagrams/`: architecture diagrams referenced throughout the documentation
+- `screenshots/`: validation evidence for the implemented solution
+- `simulation/`: helper scripts to run local adapter, worker, and end-to-end scenarios
 
-## Business Scenario
+## Prerequisites
 
-A logistics company operates a legacy shipment management platform that must integrate with:
+- Python 3.9+ or compatible runtime for local scripts and tests
+- Terraform 1.x for infrastructure deployment
+- AWS CLI configured with appropriate credentials and permissions
+- Access to an AWS account with permissions for Lambda, API Gateway, EventBridge, SQS, DynamoDB, Secrets Manager, Firehose, Glue, Athena, CloudWatch, and IAM
 
-- External logistics partners
-- Internal on-premises systems
-- Existing AWS workloads
+## Getting Started
 
-The existing point-to-point integrations are difficult to maintain, tightly coupled, and difficult to scale.
+1. Install Python dependencies:
 
-This project redesigns the integration layer using AWS managed services and event-driven architecture.
-
----
-
-## Solution Architecture
-
-Core AWS services include:
-
-- Amazon API Gateway
-- AWS Lambda
-- Amazon EventBridge
-- Amazon SQS
-- Amazon DynamoDB
-- AWS Secrets Manager
-- Amazon S3
-- Amazon Data Firehose
-- AWS Glue
-- Amazon Athena
-- Amazon QuickSight
-- Amazon CloudWatch
-
----
-
-## Project Structure
-
-```
-Modernizing-Legacy-Logistics-Platform/
-│
-├── diagrams/
-├── docs/
-├── lambdas/
-├── payloads/
-├── simulation/
-├── terraform/
-├── tests/
-├── README.md
-├── requirements.txt
-└── .gitignore
+```bash
+pip install -r requirements.txt
 ```
 
----
+2. Run the automated test suite:
 
-## Features
+```bash
+pytest
+```
 
-- Event-driven architecture
-- Bidirectional Adapter Lambda
-- Long-running asynchronous processing
-- Configurable outbound delivery framework
-- Support for:
-  - External partner callbacks
-  - Internal on-premises systems
-  - AWS workloads
-- DynamoDB-based message state tracking
-- Endpoint configuration repository
-- AWS Secrets Manager integration
-- Retry and DLQ support
-- Cloud-native observability
+3. Review example payloads in `payloads/` for API request structure.
 
----
+4. Deploy the infrastructure from `terraform/`:
 
-## Local Testing
+```bash
+cd terraform
+terraform init
+terraform validate
+terraform plan
+terraform apply
+```
 
-Run all tests:
+5. Use the deployed API Gateway endpoints and the event-driven pipeline to validate end-to-end behavior.
+
+6. Run the local end-to-end simulation to exercise the adapter and worker logic without AWS dependencies:
 
 ```bash
 python simulation/run_end_to_end.py
@@ -173,47 +191,175 @@ A manually configured integration environment would be difficult to reproduce, r
 
 The solution required Infrastructure as Code so that the AWS environment could be:
 
-- `MESSAGE_STATE_TABLE` identifies the deployed message lifecycle table for
-  Adapter, Worker, and Response Lambdas.
-- `PARTNER_CONFIG_TABLE` identifies the deployed partner-configuration table
-  for the Response Lambda.
+- version controlled,
+- reviewed,
+- deployed consistently,
+- tested,
+- destroyed after validation,
+- recreated when required.
 
-Deployed Terraform always supplies the environment-prefixed physical table
-names. Local simulations mock state access rather than relying on unsafe
-unprefixed table-name defaults.
+# 4. Solution Objectives
 
-#### Canonical event naming
+The primary objective of this project was to modernise the organisation's integration layer without replacing the existing Order Management System. The solution focuses on introducing cloud-native integration capabilities while preserving existing business applications and minimising operational disruption.
 
-Request events use `eventId`, `eventType`, `eventSource`, `timestamp`,
-`correlation`, and `payload`. Correlation metadata uses `correlationId`,
-`partnerId`, `sourceSystem`, `originalFormat`, and `receivedAt`. Response
-events additionally use `requestEventId`, `requestEventType`, `status`, and
-`message`. `partnerId` is the sole partner-configuration lookup key.
+The architecture was designed to achieve the following objectives:
 
-Worker-owned `processingStatus` values are `RECEIVED`, `PROCESSING`,
-`SUCCESS`, `VALIDATION_FAILED`, and `PROCESSING_FAILED`. Response-owned
-`deliveryStatus` values are `PENDING`, `RETRYING`, `CONFIGURATION_FAILED`,
-`DELIVERED`, and `DELIVERY_FAILED`. These lifecycle fields remain independent.
+- Decouple internal business systems from external logistics partners through an event-driven architecture.
+- Standardise message exchange using a canonical data model regardless of partner-specific formats.
+- Support multiple partner integrations while minimising the effort required to onboard additional partners.
+- Enable asynchronous processing for long-running business operations without blocking client requests.
+- Provide durable end-to-end message tracking across the entire processing lifecycle.
+- Securely manage partner credentials and configuration using managed AWS services.
+- Improve resilience through managed messaging, retry mechanisms, and dead-letter queues.
+- Capture integration events for operational reporting and analytical workloads.
+- Deploy the complete AWS environment using Infrastructure as Code (Terraform) to ensure consistency, repeatability, and version control.
+- Demonstrate the solution using AWS Well-Architected design principles while remaining appropriate for a portfolio-scale implementation.
 
-The current runtime supports only `HTTPS_WEBHOOK` and `PRIVATE_HTTPS`. Delivery
-handlers are selected through a central registry so future mechanisms can be
-added without changing the Response Lambda orchestration. A future delivery
-method is not supported until its code, configuration validation, IAM,
-infrastructure, and tests have all been implemented.
+These objectives guided every architectural decision throughout the project. Rather than selecting AWS services first, the architecture evolved by addressing specific business and technical challenges encountered during implementation.
 
-#### PartnerConfiguration contract
+# 5. Architecture Journey
 
-| Field | Required | Type | Accepted values and default |
-|---|---|---|---|
-| `partnerId` | Yes | String | Non-empty DynamoDB partition key |
-| `enabled` | Yes | Boolean | Missing defaults to disabled |
-| `deliveryMethod` | Yes | String | `HTTPS_WEBHOOK` or `PRIVATE_HTTPS` |
-| `endpointUrl` | Yes | String | Valid `https://` URL |
-| `messageFormat` | No | String | `JSON` (default) or `XML` |
-| `secretId` | No | String | Non-empty Secrets Manager identifier |
-| `timeoutSeconds` | No | Integer | 1–60 seconds; default 10 |
+One of the objectives of this repository is to document not only the final solution, but also how the architecture evolved throughout the implementation.
 
-An unauthenticated callback omits `secretId`:
+The initial design addressed the business requirements at a high level, however several implementation challenges emerged during deployment, testing, and validation. Rather than treating these as isolated issues, each became an opportunity to refine the architecture and adopt a more robust solution.
+
+The final platform is therefore the result of multiple architectural iterations, each improving scalability, maintainability, security, or operational visibility.
+
+The following sections describe the most significant design decisions and the reasoning behind them.
+
+---
+
+## 5.1 Moving from Point-to-Point Integration to Event-Driven Processing
+
+The first architectural decision was to eliminate direct dependencies between the Order Management System and downstream processing components.
+
+Instead of invoking processing logic directly, incoming business requests are published as events. This allows producers and consumers to evolve independently while enabling additional services to subscribe to the same business events without modifying the originating application.
+
+Amazon EventBridge became the central event router responsible for distributing business events throughout the integration platform.
+
+This approach significantly reduced coupling, improved extensibility, and established a foundation for asynchronous processing.
+
+![High-Level Solution Architecture](docs/diagrams/AWS%20Solution%20Architecture%20Diagram%20(high-level).png)
+
+## 5.2 Designing a Canonical Data Model
+
+A key design objective was to isolate internal business processing from partner-specific message formats.
+
+External logistics providers were expected to exchange information using different payload structures and serialization formats, primarily JSON and XML. Allowing these differences to propagate throughout the platform would tightly couple business logic to individual partner implementations and significantly increase the effort required to support new integrations.
+
+To address this, the solution adopts a canonical JSON data model as the internal representation of all business transactions. The inbound Adapter Lambda is responsible for validating incoming requests, detecting the source format, and transforming the payload into the canonical model before publishing it to Amazon EventBridge.
+
+From this point onwards, every downstream component—including the Worker Lambda, operational analytics pipeline, and response processing logic—operates exclusively on the canonical representation. Partner-specific transformations occur only at the integration boundaries, where the outbound Adapter converts the canonical message into the format required by the destination partner.
+
+This approach centralises transformation logic, simplifies downstream processing, reduces duplication, and allows additional partners to be onboarded with minimal impact on the core integration platform.
+
+## 5.3 Supporting Long-Running Business Processes
+
+Creating a shipment is only the beginning of its lifecycle. As a shipment progresses through fulfilment, transport, and delivery, multiple business events may occur long after the original API request has completed.
+
+A synchronous request-response model is therefore unsuitable for representing the complete business process. Once the initial request is accepted, subsequent status updates must be delivered independently of the originating client request.
+
+To support this requirement, the platform separates request processing from response delivery. After completing the required business logic, the Worker Lambda publishes a business event to Amazon EventBridge rather than communicating directly with external partners. EventBridge routes the event to a dedicated response queue, where the Response Lambda retrieves the appropriate partner configuration and delivers the status update using an HTTPS webhook.
+
+This event-driven callback model enables shipment updates to originate from any authorised business process rather than only from the original API request. It also removes direct dependencies between processing and outbound delivery, allowing each stage to scale, retry, and recover independently while maintaining a complete audit trail of the transaction lifecycle.
+
+![End-to-End Request and Callback Flow](docs/diagrams/End-to-End%20Request%20and%20Callback%20Flow.png)
+
+## 5.4 Managing Partner Configuration Securely
+
+Integrating with multiple external partners requires more than message transformation. Each partner may expose different endpoints, authentication methods, certificates, API keys, or webhook URLs that must be managed securely and independently of application code.
+
+To achieve this, the solution separates partner configuration into two distinct categories:
+
+- **Non-sensitive configuration**, such as endpoint URLs and integration settings, is stored in a dedicated DynamoDB PartnerConfiguration table.
+- **Sensitive credentials**, including API keys and authentication secrets, are stored in AWS Secrets Manager.
+
+Rather than retrieving secrets directly from AWS Secrets Manager during every invocation, the Response Lambda uses the AWS Parameters and Secrets Lambda Extension. This extension caches secrets within warm Lambda execution environments, significantly reducing latency, API calls, and operational costs while maintaining secure access to partner credentials.
+
+This separation of responsibilities provides a scalable configuration model that simplifies partner onboarding, supports credential rotation, and keeps sensitive information isolated from application logic.
+
+## 5.5 Providing End-to-End Message Visibility
+
+Enterprise integration platforms require more than reliable message processing—they also need comprehensive operational visibility. Every business transaction should be traceable from initial acceptance through processing and final delivery.
+
+To support this requirement, the platform maintains a durable integration message record for every transaction using Amazon DynamoDB. Each message is assigned a unique correlation identifier that enables all processing stages to be linked together regardless of where they occur within the architecture.
+
+During implementation, it became apparent that a single status field was insufficient to accurately represent the lifecycle of a message. A shipment could be processed successfully while the subsequent webhook delivery failed due to a temporary partner outage. Recording both outcomes under a single status introduced ambiguity.
+
+The final design therefore separates the message lifecycle into two independent dimensions:
+
+- **Processing Status**, representing the outcome of business processing performed by the Worker Lambda.
+- **Delivery Status**, representing the outcome of outbound webhook delivery performed by the Response Lambda.
+
+This distinction provides a more accurate operational view of the integration platform, simplifies troubleshooting, supports retry logic, and enables independent monitoring of processing and delivery activities.
+
+![DynamoDB Message Lifecycle](docs/diagrams/DynamoDB%20Message%20Lifecycle.png)
+![Screenshot #08 – DynamoDB Integration Message Lifecycle State](screenshots/Screenshot%20%2308%20%E2%80%93%20DynamoDB%20Integration%20Message%20Lifecycle%20State.png)
+
+# 6. Final Solution Architecture
+
+The completed solution implements a fully serverless, event-driven integration platform using managed AWS services. Each component has a clearly defined responsibility, allowing the platform to scale independently, reduce operational overhead, and simplify future partner onboarding.
+
+At a high level, incoming requests are accepted through Amazon API Gateway and processed by an Adapter Lambda responsible for request validation, format detection, and transformation into the canonical data model. Business events are then published to Amazon EventBridge, which routes them to downstream consumers without introducing direct dependencies between services.
+
+Amazon SQS provides durable buffering between processing stages, enabling asynchronous execution, retry handling, and failure isolation. The Worker Lambda performs business processing before publishing a completion event back to EventBridge, allowing subsequent response delivery to remain fully decoupled from the original request.
+
+Outbound partner notifications are handled by the Response Lambda, which retrieves the appropriate partner configuration, securely accesses credentials from AWS Secrets Manager using the Parameters and Secrets Lambda Extension cache, and delivers business updates via HTTPS webhooks.
+
+Operational visibility is provided through DynamoDB and Amazon CloudWatch, with historical analytics supported by the Terraform-provisioned EventBridge → Firehose → S3 → Glue → Athena pipeline.
+
+Amazon QuickSight provides the visualisation layer. It was intentionally configured through the AWS Console rather than managed by Terraform, connected to Athena as its analytics data source, and used to create representative dashboards for testing and portfolio demonstration.
+
+The following architecture diagram provides a high-level view of the completed AWS solution and the interactions between its major components.
+
+![AWS Solution Architecture](docs/diagrams/AWS%20Solution%20Architecture%20Diagram%20(high-level).png)
+
+While the architecture diagram illustrates the logical structure of the platform, the following sequence diagram demonstrates how a typical business transaction flows through the solution, from the initial API request to asynchronous processing and final partner callback.
+
+![End-to-End Request Processing Sequence](docs/diagrams/End-to-End%20Request%20Processing%20Sequence.png)
+
+# 7. Engineering Challenges
+
+Following the successful deployment of the solution, implementation and end-to-end testing confirmed that the overall architecture met its original design objectives. At the same time, practical experience highlighted several opportunities to refine specific implementation decisions and strengthen the solution.
+
+These refinements did not alter the overall architecture or its event-driven design. Instead, they improved areas such as component responsibilities, operational efficiency, message tracking, security, and performance based on observations made during deployment and validation.
+
+The following sections describe the most significant architectural enhancements introduced after deployment and explain the reasoning behind each refinement.
+
+## 7.1 Restoring the Intended API Gateway Boundary
+
+The original architecture assigned responsibility for request parsing, content-type handling, validation, and canonical transformation to the Inbound Adapter Lambda. During implementation, however, the API Gateway was still configured with non-proxy (`AWS`) Lambda integrations and Velocity Template Language (VTL) mapping templates. These templates parsed incoming requests, reshaped payloads into the canonical structure, and used `passthrough_behavior = "NEVER"` before invoking the Adapter Lambda.
+
+Although the solution functioned correctly, this implementation conflicted with the original architectural intent by placing part of the integration logic in the API layer rather than the Adapter.
+
+To restore the intended separation of responsibilities, the Terraform configuration was updated to replace the custom Lambda integrations with Lambda proxy (`AWS_PROXY`) integrations for the Create Shipment, Update Shipment Status, and Retrieve Shipment endpoints. The VTL mapping templates were removed, and the Adapter Lambda was enhanced to receive and process the complete API Gateway request, including content-type detection, JSON/XML parsing, request validation, and canonical event construction. :contentReference[oaicite:0]{index=0}
+
+This refinement simplified the API Gateway configuration while ensuring that all integration-specific logic remained within a single component. API Gateway now focuses solely on transport concerns such as authentication, throttling, routing, and request forwarding, while the Adapter Lambda owns all protocol and message transformation responsibilities.
+
+## 7.2 Improving Long-Running Response Delivery
+
+The original response mechanism assumed that the information required to deliver a processing result would always be available when the Response Lambda was invoked. During implementation, it became apparent that this assumption was insufficient for long-running business processes.
+
+Shipment status updates may occur hours or even days after the original request has been accepted. By that time, the original HTTP request no longer exists, meaning the platform must independently determine where and how the response should be delivered.
+
+The solution was refined by separating partner configuration from message state. A dedicated **PartnerConfiguration** table was introduced to store non-sensitive partner information, including callback endpoints and references to partner credentials stored in AWS Secrets Manager. The Response Lambda now identifies the originating partner using the stored `partnerId`, retrieves the corresponding configuration from DynamoDB, securely obtains the required credentials through the AWS Parameters and Secrets Lambda Extension, and delivers the response to the appropriate webhook.
+
+This refinement removed any dependency on the original client connection and enabled the platform to support long-running asynchronous business processes while maintaining a consistent delivery mechanism for every partner. It also established a reusable pattern for onboarding additional integration partners without requiring changes to the application logic.
+![Screenshot #15 – Internal Event Successfully Published to EventBridge](screenshots/Screenshot%20%2315%20%E2%80%93%20Internal%20Event%20Successfully%20Published%20to%20EventBridge.png)
+
+![Screenshot #16 – External Webhook Callback from Internal Event](screenshots/Screenshot%20%2316%20%E2%80%93%20External%20Webhook%20Callback%20from%20Internal%20Event.png)
+
+## 7.3 Refining Message State Management
+
+The platform was originally designed to maintain the lifecycle of every integration request in a dedicated DynamoDB table. As implementation progressed, additional testing highlighted that a single message status was not sufficient to accurately represent asynchronous processing.
+
+In particular, a shipment could be processed successfully by the Worker Lambda while the subsequent webhook delivery failed or required multiple retry attempts. Recording both outcomes under a single status made it difficult to determine whether a transaction had failed during business processing or during response delivery.
+
+The data model was therefore refined by separating message state into two independent attributes: **processingStatus** and **deliveryStatus**. The Worker Lambda became responsible for updating the processing status, while the Response Lambda independently managed delivery status together with delivery attempts and related metadata.
+
+This refinement provided a more accurate representation of each transaction throughout its lifecycle, enabling operational teams to distinguish processing outcomes from delivery outcomes and simplifying monitoring, troubleshooting, and retry management without changing the overall architecture.
+
+**Before**
 
 ```json
 {
@@ -226,70 +372,362 @@ An unauthenticated callback omits `secretId`:
 
 ```json
 {
-  "partnerId": "partner-001",
-  "enabled": true,
-  "deliveryMethod": "PRIVATE_HTTPS",
-  "endpointUrl": "https://partner.example/callback",
-  "messageFormat": "XML",
-  "secretId": "legacy-logistics-dev/sample-partner/callback-credentials",
-  "timeoutSeconds": 10
+  "correlationId": "abc123",
+  "processingStatus": "COMPLETED",
+  "deliveryStatus": "FAILED",
+  "deliveryAttempts": 3
 }
 ```
 
-The secret `SecretString` must be a JSON object. Both supported credential
-properties are optional:
+## 7.4 Optimising Partner Credential Retrieval
 
-```json
-{
-  "authorizationHeader": "Bearer example-token",
-  "apiKey": "example-api-key"
+Supporting webhook-based response delivery required the platform to securely manage partner credentials without embedding sensitive information in the application code or configuration.
+
+AWS Secrets Manager was selected to store sensitive partner credentials, while the **PartnerConfiguration** table maintained references to the appropriate secret for each integration partner. During implementation, consideration was given to the long-term operational behaviour of the solution, particularly the impact of repeatedly retrieving the same secret for every outbound response.
+
+To reduce latency, lower the number of Secrets Manager API calls, and minimise operational costs, the solution was refined to use the **AWS Parameters and Secrets Lambda Extension**. The extension caches retrieved secrets within the Lambda execution environment, allowing subsequent invocations to reuse cached credentials while automatically refreshing them after the configured cache period.
+
+The Response Lambda was updated to retrieve partner credentials through the local extension endpoint rather than calling the Secrets Manager service directly. This change was transparent to the business logic while improving performance and reducing the number of external API requests during periods of sustained message processing.
+
+```python
+secret = get_secret(secret_name)
+```
+
+By introducing local secret caching, the solution retained the security benefits of AWS Secrets Manager while improving the efficiency of outbound response processing.
+
+## 7.5 Validating Platform Behaviour Under Load
+
+After functional testing was completed, a controlled end-to-end load test was performed using 150 requests with a concurrency level of 10.
+
+The first test produced numerous HTTP `429 Too Many Requests` responses. Investigation confirmed that API Gateway was rejecting requests before they entered the event-driven processing pipeline because the Usage Plan was configured with a burst limit of 20 requests and a steady-state rate limit of 10 requests per second.
+
+![Screenshot #12 – Controlled End-to-End Load Test Execution and API Gateway Throttling Results](screenshots/Screenshot%20%2312%20%E2%80%93%20Controlled%20End-to-End%20Load%20Test%20Execution%20and%20API%20Gateway%20Throttling%20Results.png)
+
+The throttling configuration in Terraform was then adjusted by increasing the burst limit from 20 to 200 and the rate limit from 10 to 100 requests per second.
+
+```hcl
+throttle_settings {
+  burst_limit = 200
+  rate_limit  = 100
 }
 ```
 
-Never store real credential values in this repository or Terraform variable
-files. The AWS Parameters and Secrets Lambda Extension retrieves credentials at
-runtime. The typed AWS CLI example in `examples/partner-001.json` can be copied,
-reviewed, and loaded manually after replacing the placeholder with a unique
-test webhook URL:
+The same controlled test was repeated after applying the updated configuration. All 150 requests were accepted with HTTP `202 Accepted` responses, completing in approximately 3.86 seconds with an average response time of approximately 241 milliseconds.
 
-```powershell
-aws dynamodb put-item `
-  --table-name legacy-logistics-dev-PartnerConfiguration `
-  --item file://examples/partner-001.json `
-  --region ap-southeast-2
+![Screenshot #13 – Controlled Load Test Results (150 Requests, Concurrency 10)](screenshots/Screenshot%20%2313%20%E2%80%93%20Controlled%20Load%20Test%20Results%20%28150%20Requests%2C%20Concurrency%2010%29.png)
+
+This test demonstrated that API Gateway throttling must be configured in line with the expected traffic profile. It also confirmed that the asynchronous processing architecture could accept the planned request volume without introducing additional components or changing the wider solution design.
+
+# 8. Solution Validation
+
+The completed solution was validated through a series of functional, integration, and performance tests designed to verify both the implementation and the architectural objectives of the project.
+
+Rather than testing individual AWS services in isolation, the validation process followed complete business transactions as they progressed through the event-driven workflow—from the initial API request to asynchronous processing, response delivery, and operational reporting.
+
+The following sections summarise the key validation activities and demonstrate that the implemented solution performs as expected under normal operating conditions.
+
+## 8.1 Functional Validation
+
+Functional testing confirmed that each API endpoint performed its intended business function and that requests were successfully processed throughout the event-driven workflow.
+
+The tests verified request acceptance, payload validation, asynchronous processing, data persistence, and response generation for the primary business operations supported by the platform.
+
+### Create Shipment
+
+A shipment creation request was submitted through Amazon API Gateway and successfully accepted for asynchronous processing.
+
+![Screenshot #01 – Create Shipment Request Accepted](screenshots/Screenshot%20%2301%20%E2%80%93%20Create%20Shipment%20Request%20Accepted.png)
+
+The request was transformed into the canonical event model and published to Amazon EventBridge, enabling asynchronous processing by downstream services while decoupling the API layer from backend processing.
+
+![Screenshot #15 – Internal Event Successfully Published to EventBridge](screenshots/Screenshot%20%2315%20%E2%80%93%20Internal%20Event%20Successfully%20Published%20to%20EventBridge.png)
+
+The Worker Lambda processed the event successfully and recorded the transaction state in the `IntegrationMessageState` DynamoDB table, providing durable lifecycle tracking and operational visibility.
+
+![Screenshot #03 – Successful Message State in DynamoDB](screenshots/Screenshot%20%2303%20%E2%80%93%20Successful%20Message%20State%20in%20DynamoDB.png)
+
+### Retrieve Shipment
+
+The Retrieve Shipment endpoint successfully returned the requested shipment details using the stored shipment identifier. The response demonstrates that the platform can retrieve shipment information from the canonical data model regardless of the original inbound message format.
+
+![Screenshot #11 – JSON Format Retrieval of Shipment Created from an XML Integration Request](screenshots/Screenshot%20%2311%20%E2%80%93%20JSON%20Format%20Retrieval%20of%20Shipment%20Created%20from%20an%20XML%20Integration%20Request.png)
+
+### Update Shipment Status
+
+Shipment status updates were accepted and processed successfully, demonstrating support for long-running business operations beyond the initial shipment creation. After the shipment status changed internally, an event was published and delivered asynchronously to the originating partner through the configured webhook.
+
+![Screenshot #16 – External Webhook Callback from Internal Event](screenshots/Screenshot%20%2316%20%E2%80%93%20External%20Webhook%20Callback%20from%20Internal%20Event.png)
+
+The `IntegrationMessageState` table recorded the updated processing and delivery status, providing end-to-end visibility of the transaction lifecycle and confirming successful completion of the asynchronous workflow.
+
+![Screenshot #08 – DynamoDB Integration Message Lifecycle State](screenshots/Screenshot%20%2308%20%E2%80%93%20DynamoDB%20Integration%20Message%20Lifecycle%20State.png)
+
+## 8.2 End-to-End Event Processing
+
+Beyond validating individual API operations, end-to-end testing verified that business events were successfully propagated through the complete event-driven architecture.
+
+After the Worker Lambda completed business processing, a shipment status event was published to Amazon EventBridge. The event was then routed to the outbound processing pipeline, where the Response Lambda retrieved the appropriate partner configuration and delivered the business response to the originating partner using an HTTPS webhook.
+
+This validation confirmed that the platform correctly supports asynchronous business processes, allowing responses to be delivered independently of the original client request while maintaining message correlation throughout the transaction lifecycle.
+
+![Screenshot #15 – Internal Event Successfully Published to EventBridge](screenshots/Screenshot%20%2315%20%E2%80%93%20Internal%20Event%20Successfully%20Published%20to%20EventBridge.png)
+
+---
+
+The corresponding webhook callback was successfully received by the external endpoint, confirming completion of the end-to-end processing workflow.
+
+![Screenshot #16 – External Webhook Callback from Internal Event](screenshots/Screenshot%20%2316%20%E2%80%93%20External%20Webhook%20Callback%20from%20Internal%20Event.png)
+
+### 8.3 Analytics Validation
+
+In addition to processing business transactions, the platform was validated to ensure that operational events were successfully captured for reporting and analysis.
+
+Processed integration events were streamed to Amazon S3 using Amazon Data Firehose, catalogued by AWS Glue, and queried through Amazon Athena. This pipeline provides a historical record of integration activity that can support operational reporting, troubleshooting, auditing, and business analytics.
+
+The following diagram illustrates the analytics pipeline implemented as part of the solution.
+
+![Analytics Pipeline](docs/diagrams/Analytics%20Pipeline.png)
+
+The following screenshots demonstrate the successful ingestion, cataloguing, and querying of integration data.
+
+The processed integration events were successfully delivered to the Amazon S3 data lake.
+
+![Screenshot #04 – Integration Event Archived to S3 in Parquet Format](screenshots/Screenshot%20%2304%20%E2%80%93%20Integration%20Event%20Archived%20to%20S3%20in%20Parquet%20Format.png)
+
+AWS Glue successfully catalogued the dataset, making it available for analytical queries.
+
+![Screenshot #05 – Integration Event Archived to S3 in Parquet Format](screenshots/Screenshot%20%2305%20%E2%80%93%20Integration%20Event%20Archived%20to%20S3%20in%20Parquet%20Format.png)
+
+Amazon Athena successfully queried the stored integration events, confirming that the analytics pipeline was operating correctly from data ingestion through to query execution.
+
+![Screenshot #06 – Amazon Athena Query Results for Integration Events](screenshots/Screenshot%20%2306%20%E2%80%93%20Amazon%20Athena%20Query%20Results%20for%20Integration%20Events.png)
+
+After the Terraform-provisioned pipeline was validated, Amazon QuickSight was manually connected to Athena as its analytics data source. Representative dashboards were created and tested through the AWS Console for portfolio demonstration. Keeping this visualisation layer outside Terraform was an intentional project-scope decision, not an unimplemented part of the solution.
+
+## 8.4 Performance Validation
+
+Following the refinement of the API Gateway throttling configuration described in Section 7.5, the platform was subjected to a final controlled load test to confirm its behaviour under concurrent requests.
+
+The validation consisted of 150 requests with a concurrency level of 10. All requests were accepted with HTTP `202 Accepted` responses and entered the asynchronous processing pipeline successfully. The test completed in approximately 3.86 seconds with an average response time of approximately 241 milliseconds.
+
+These results confirmed that the deployed configuration was capable of supporting the planned workload while preserving the responsiveness of the API and the scalability benefits of the event-driven architecture.
+
+![Screenshot #13 – Controlled Load Test Results (150 Requests, Concurrency 10)](screenshots/Screenshot%20%2313%20%E2%80%93%20Controlled%20Load%20Test%20Results%20%28150%20Requests%2C%20Concurrency%2010%29.png)
+
+# 9. Lessons Learned
+
+This project provided valuable practical experience in designing, implementing, and validating an enterprise integration platform using AWS managed services. While the original architecture met its intended objectives, the implementation process reinforced several important architectural principles that will influence future solution designs.
+
+## 9.1 Clearly Define Component Responsibilities
+
+One of the most important lessons was the value of maintaining clear boundaries between architectural components. Although the initial implementation was functional, reviewing the deployed solution revealed that API Gateway was performing part of the request transformation through VTL mapping templates. Moving this responsibility entirely into the Adapter Lambda restored the intended separation of concerns and produced a cleaner, more maintainable solution.
+
+## 9.2 Design for Long-Running Business Processes
+
+Enterprise integrations rarely end when an API request returns a response. Supporting asynchronous business processes required the platform to maintain sufficient information to deliver business outcomes long after the original request had completed. Separating partner configuration from message state and using webhook callbacks provided a flexible approach that can accommodate additional partners and extended business workflows.
+
+## 9.3 Operational Visibility Is Part of the Architecture
+
+Tracking the lifecycle of integration messages proved to be just as important as processing them. Refining the message model to distinguish processing outcomes from delivery outcomes provided greater operational clarity and simplified monitoring, troubleshooting, and retry management.
+
+## 9.4 Infrastructure Configuration Requires Validation
+
+Load testing demonstrated that infrastructure configuration can significantly influence application behaviour. The initial HTTP 429 responses were caused by API Gateway throttling rather than limitations in the event-driven architecture itself. Validating the deployed infrastructure under realistic workloads was therefore as important as validating the application logic.
+
+## 9.5 Security and Performance Must Be Considered Together
+
+Protecting sensitive partner credentials was essential, but security should not unnecessarily reduce operational efficiency. Combining AWS Secrets Manager with the AWS Parameters and Secrets Lambda Extension allowed the platform to maintain strong security while reducing repeated secret retrievals, improving response times, and lowering operational overhead.
+
+These lessons reinforced that successful solution architecture extends beyond selecting AWS services. Careful allocation of responsibilities, continuous validation, and iterative refinement are equally important in delivering solutions that remain scalable, maintainable, and operationally effective.
+
+# 10. Production Considerations
+
+The solution presented in this repository demonstrates an enterprise-oriented integration platform implemented within the scope of a portfolio project. While the architecture successfully satisfies the defined business and technical requirements, a production deployment would typically incorporate additional capabilities to meet organisational standards for availability, security, operations, and governance.
+
+The following enhancements would be recommended for a production implementation.
+
+## High Availability and Disaster Recovery
+
+- Deploy the solution across multiple AWS Regions to improve resilience against regional failures.
+- Replicate DynamoDB tables using Amazon DynamoDB Global Tables where business continuity requirements justify cross-region data replication.
+- Configure Amazon Route 53 health checks and failover routing to automatically redirect traffic during regional outages.
+
+## Security
+
+- Protect public API endpoints using AWS WAF to mitigate common web attacks.
+- Enable AWS Shield Advanced where enhanced DDoS protection is required.
+- Apply least-privilege IAM policies and implement regular credential rotation.
+- Use customer-managed AWS KMS keys where organisational security policies require additional control over encryption.
+
+## Observability
+
+- Expand Amazon CloudWatch dashboards and alarms to monitor application health and business metrics.
+- Configure automated operational notifications using Amazon EventBridge.
+- Integrate with enterprise incident management platforms such as AWS Systems Manager Incident Manager, ServiceNow, or PagerDuty where required.
+
+## DevOps and Governance
+
+- Implement CI/CD pipelines to automate infrastructure deployment and application releases.
+- Introduce automated testing, infrastructure validation, and security scanning as part of the deployment pipeline.
+- Apply governance controls to ensure Infrastructure as Code complies with organisational standards before deployment.
+
+## Analytics
+
+- Apply production dashboard governance to the manually demonstrated QuickSight layer, including dataset ownership, dashboard review, release, and lifecycle controls.
+- Automate QuickSight user, group, permission, and environment management using appropriate enterprise deployment practices.
+- Expand the representative dashboards into broader operational and business reporting for integration throughput, processing performance, delivery success rates, and long-term trends.
+
+Although these production-hardening capabilities were outside the scope of this project, the implemented architecture provides a solid foundation on which they can be introduced without significant architectural changes. QuickSight itself was implemented and demonstrated manually and is not future or unimplemented work.
+
+# 11. Cost Analysis
+
+This estimate models the Terraform-defined architecture in **Asia Pacific (Sydney), `ap-southeast-2`**, using public AWS on-demand prices checked on **30 July 2026**. It is an engineering estimate rather than a quote: actual cost depends on payloads, latency, batch fill, retries, logging volume, partner response times, analytics usage, and the account's existing shared resources. Prices are in **USD** and exclude taxes, AWS Free Tier benefits, negotiated discounts, Savings Plans, and Enterprise Discount Programs.
+
+The current Terraform usage plan limits the demonstration API key to 10,000 requests per month. The scenarios below therefore assume that this portfolio quota is raised or replaced with suitable production usage plans; no infrastructure change is included in this estimate.
+
+## Workload and Sizing Assumptions
+
+One *integration request* means one REST API request accepted by the Adapter. In the successful path it creates one request event and one processing-response event, so **N integration requests produce 2N custom EventBridge events, 2N SQS messages, and 2N Firehose analytics records**.
+
+| Cost Driver | Assumption and Formula |
+|-------------|------------------------|
+| Payloads | Average inbound request and each canonical event: **1 KB**, below the 64 KB EventBridge/SQS billing increment. Average API response plus outbound webhook payload: **2 KB** of internet egress per request. |
+| API Gateway | **N Regional REST API calls**; no API cache. The custom domain and ACM certificate do not add an hourly charge. |
+| Lambda | All three functions use **256 MB x86**. Adapter: **N invocations × 150 ms**. SQS mappings allow batches of 10; an average batch fill of 8 gives Worker and Response Processor **N/8 invocations each**, averaging **1.0 s** and **2.0 s** per batch respectively. Total: **1.25N requests and 0.13125N GB-seconds**. Retries are excluded from the base case. |
+| EventBridge | Adapter and Worker each publish one custom event: **2N billable ingested events**. Delivery to SQS and Firehose in the same account is assumed free. |
+| SQS | Two Standard queues. Per queue: **N sends + N/8 batched receives + N/8 batched deletes**; total **2.5N SQS requests**. Messages remain below 64 KB. Retry, visibility-change, and DLQ traffic is excluded from the successful-path base case. |
+| DynamoDB | On-demand Standard tables. Per request: **five <=1 KB writes** (initial state, Worker claim/completion, delivery claim/completion) and **one strongly consistent <=4 KB partner-configuration read**. Message state averages **1 KB retained for 30 days**; Standard storage and point-in-time recovery are included. Conditional failures and retries would add requests. |
+| Firehose | **2N records**, 1 KB each, but Direct PUT ingestion and format conversion are billed in **5 KB increments**. The stream also uses dynamic partitioning, JQ metadata extraction, JSON-to-Parquet conversion, a 64 MB/300 s buffer, and Snappy compression. Delivered Parquet is assumed to be **35% of source JSON size**; JQ compute and object charges are estimated from AWS's published dynamic-partitioning example. |
+| S3 | Steady-state 365-day analytics retention: one monthly cohort in Standard, two in Standard-IA, and nine in Glacier Instant Retrieval, following the implemented lifecycle. Firehose PUTs are estimated from 64 MB objects, with a daily-partition floor. Athena results expire after 14 days. CloudTrail management logs are assumed to remain below 1 GB/month. |
+| Glue | Terraform creates one Data Catalog database and one external table with partition projection. It creates **no crawler and no ETL job**, so there are no DPU-hour charges; catalog request/storage cost is negligible at this scale. |
+| Athena | Illustrative analyst usage of **100 queries/month**, each scanning 10% of the current month's partitioned Parquet data. The workgroup's implemented 1 GB per-query cutoff limits accidental scans. |
+| CloudWatch | API access logs plus Lambda/application logs average **1.5 KB per integration request**, retained for 30 days. Fixed monitoring assumes 15 API Gateway detailed metrics (five for each of three methods) and the six Terraform alarms. Logs Insights queries are excluded. |
+| Secrets Manager | One Terraform-managed secret: **$0.40/month**. The Parameters and Secrets Lambda Extension is assumed to provide a **99.9% cache-hit rate**, leaving Secrets Manager API calls equal to 0.1% of response deliveries. |
+| NAT and transfer | One NAT Gateway runs for **730 hours/month** with one public IPv4 address. Private-Lambda traffic through NAT is estimated at **15 KB/request** for AWS API calls and partner webhook traffic, including both directions. Internet data transfer out is estimated separately from the 2 KB/request response payload. Cross-AZ transfer is not modelled. |
+| CloudTrail and DNS | The first copy of management events in the configured trail has no CloudTrail event charge; only its small S3 footprint is included. Terraform uses an existing Route 53 hosted zone, so its $0.50/month zone charge is not attributed incrementally; alias queries to API Gateway and ACM public certificates are assumed to add no charge. |
+
+## Price Basis and Monthly Estimate
+
+Key Sydney rates used are: REST API **$3.50/million calls**; Lambda **$0.20/million requests + $0.0000166667/GB-second**; EventBridge custom events **$1.00/million**; Standard SQS **$0.40/million requests**; DynamoDB **$0.71/million WRUs, $0.1425/million RRUs, $0.285/GB-month table storage, and $0.228/GB-month PITR**; Firehose **$0.036/GB ingestion, $0.023/GB format conversion, $0.025/GB dynamic partitioning, $0.088/JQ processing hour, and $0.0063/1,000 delivered objects**; S3 Standard **$0.025/GB-month**, Standard-IA **$0.0138/GB-month**, and Glacier Instant Retrieval **$0.005/GB-month**; Athena **$5/TB scanned**; CloudWatch Logs **$0.67/GB ingestion + $0.033/GB-month storage**; NAT Gateway **$0.059/hour + $0.059/GB processed**; public IPv4 **$0.005/hour**; and modelled internet data transfer out **$0.114/GB**.
+
+| AWS Service | Fixed / Month | Variable at 5M | Variable at 10M | Variable at 20M |
+|-------------|--------------:|---------------:|----------------:|----------------:|
+| API Gateway REST API | $0.00 | $17.50 | $35.00 | $70.00 |
+| Lambda requests and duration | $0.00 | $12.19 | $24.38 | $48.75 |
+| EventBridge custom-event ingestion | $0.00 | $10.00 | $20.00 | $40.00 |
+| SQS Standard requests | $0.00 | $5.00 | $10.00 | $20.00 |
+| DynamoDB requests, state storage, and PITR | $0.00 | $20.91 | $41.82 | $83.64 |
+| Data Firehose ingestion and optional processing | $0.00 | $3.13 | $6.26 | $12.52 |
+| S3 analytics storage and requests | $0.00 | $0.33 | $0.65 | $1.30 |
+| Glue Data Catalog | $0.00 | <$0.01 | <$0.01 | <$0.01 |
+| Athena queries | $0.00 | $0.16 | $0.33 | $0.65 |
+| CloudWatch detailed metrics and six alarms | $5.10 | $0.00 | $0.00 | $0.00 |
+| CloudWatch log ingestion and 30-day storage | $0.00 | $5.03 | $10.06 | $20.12 |
+| Secrets Manager | $0.40 | $0.03 | $0.05 | $0.10 |
+| NAT Gateway | $43.07 | $4.22 | $8.44 | $16.88 |
+| Public IPv4 address | $3.65 | $0.00 | $0.00 | $0.00 |
+| Internet data transfer out | $0.00 | $1.09 | $2.17 | $4.35 |
+| CloudTrail, Route 53 incremental records, ACM, IAM, VPC, subnets, route tables, internet gateway | $0.00 | ≈$0.00 | ≈$0.00 | ≈$0.00 |
+| **Fixed subtotal** | **$52.22** |  |  |  |
+| **Variable subtotal** |  | **$79.59** | **$159.16** | **$318.31** |
+| **Estimated monthly total** |  | **$131.81 (~$132)** | **$211.38 (~$211)** | **$370.53 (~$371)** |
+
+Example reconciliation for 5M requests: **$52.22 fixed + $79.59 variable = $131.81/month**. The 10M and 20M totals reconcile in the same way. Values are rounded to cents for readability; “less than one cent” line items are not forced into false precision.
+
+## Cost Interpretation and Optimisation
+
+The NAT Gateway exists because the **private Response Processor Lambda requires outbound internet access to call external partner webhook endpoints**. The Adapter is also VPC-attached and reaches public AWS service endpoints through the same route because the Terraform does not provision VPC endpoints. At 730 hours, the Sydney NAT Gateway is about **$43.07/month**, and its required public IPv4 address is about **$3.65/month**, for **$46.72 before processing any data**. The previously discussed estimate of approximately **US$47/month remains accurate**. This is the dominant fixed cost at low traffic volumes; it is paid even when no integrations run.
+
+The strongest traffic-driven costs are DynamoDB writes, API Gateway calls, Lambda duration, EventBridge ingestion, CloudWatch log ingestion, SQS requests, and NAT/data transfer. Firehose's 5 KB per-record billing floor also matters because the estimated 1 KB events are delivered individually. S3, Glue, and Athena remain comparatively small because Firehose writes compressed Parquet, the table uses partition projection, lifecycle policies tier the data, and Athena enforces a scan cutoff.
+
+Practical optimisation opportunities include:
+
+- **Implemented:** SQS Lambda batching, Firehose buffering, Snappy Parquet conversion, date partitioning, S3 lifecycle tiers, Athena scan limits, DynamoDB on-demand capacity, 30-day log retention, secret caching, and one NAT Gateway rather than one per Availability Zone.
+- **Production recommendation:** add DynamoDB gateway and appropriate interface VPC endpoints only after comparing their hourly cost with NAT-processed AWS API traffic; keep the NAT path for external webhooks.
+- **Production recommendation:** evaluate moving the Adapter out of the VPC because it does not require private resources, reducing its NAT traffic and cold-start networking overhead.
+- **Production recommendation:** tune Lambda memory/duration using measured telemetry, increase effective SQS batch fill where latency permits, sample non-error success logs, and aggregate small analytics records before Firehose when operationally acceptable.
+- **Production recommendation:** use AWS Budgets, Cost Anomaly Detection, cost-allocation tags, and Cost and Usage Reports; for sustained predictable scale, compare API Gateway REST versus HTTP API only if the required API-key, usage-plan, validation, and governance capabilities can be preserved.
+- **Availability trade-off:** production resilience may require one NAT Gateway per Availability Zone, which would increase fixed cost; the implemented single-NAT design intentionally favours portfolio cost over multi-AZ egress independence.
+
+QuickSight (now surfaced under Amazon Quick Sight/Quick Suite branding) was intentionally implemented and tested through the AWS Console, connected to Athena, and used to create representative demonstration dashboards. Because it is not provisioned or managed by Terraform, it is excluded from the totals. For an ongoing production environment, budget it separately using the selected edition and users—for example, approximately **$24 per Author/month**, **$3 per Reader/month**, and optional **SPICE at $0.38/GB-month** under current list pricing.
+
+Official sources: [AWS Pricing Calculator](https://calculator.aws/), [AWS Price List Bulk API](https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/using-the-aws-price-list-bulk-api.html), [API Gateway pricing](https://aws.amazon.com/api-gateway/pricing/), [Lambda pricing](https://aws.amazon.com/lambda/pricing/), [EventBridge pricing](https://aws.amazon.com/eventbridge/pricing/), [SQS pricing](https://aws.amazon.com/sqs/pricing/), [DynamoDB pricing](https://aws.amazon.com/dynamodb/pricing/), [Data Firehose pricing](https://aws.amazon.com/firehose/pricing/), [S3 pricing](https://aws.amazon.com/s3/pricing/), [Glue pricing](https://aws.amazon.com/glue/pricing/), [Athena pricing](https://aws.amazon.com/athena/pricing/), [CloudWatch pricing](https://aws.amazon.com/cloudwatch/pricing/), [Secrets Manager pricing](https://aws.amazon.com/secrets-manager/pricing/), [Amazon VPC and public IPv4 pricing](https://aws.amazon.com/vpc/pricing/), [CloudTrail pricing](https://aws.amazon.com/cloudtrail/pricing/), [Route 53 pricing](https://aws.amazon.com/route53/pricing/), and [Quick Sight pricing](https://aws.amazon.com/quick/quicksight/pricing/).
+
+# 12. Deployment
+
+The core solution infrastructure was deployed using **Terraform**, providing a repeatable and consistent deployment process for networking, security, compute, integration services, monitoring, and the EventBridge → Firehose → S3 → Glue → Athena analytics pipeline.
+
+QuickSight was the intentional exception: it was configured and tested manually through the AWS Console, connected to Athena, and used to create representative dashboards for demonstration. It was not deployed or managed by Terraform.
+
+Terraform also simplified iterative development throughout the project. As architectural refinements were introduced, infrastructure changes could be applied consistently without manual reconfiguration, reducing deployment errors and maintaining alignment between the implementation and the intended architecture.
+
+## Infrastructure as Code
+
+The infrastructure was organised into logical Terraform configuration files, each responsible for a specific area of the solution.
+
+| Terraform Configuration | Purpose |
+|--------------------------|---------|
+| `network.tf` | VPC, subnets, routing, NAT Gateway and VPC networking |
+| `security.tf` | Security Groups and networking controls |
+| `iam.tf` | IAM roles and permissions for AWS services |
+| `lambda.tf` | Deployment of Lambda functions and execution roles |
+| `apigateway.tf` | REST API, resources, methods, integrations and API keys |
+| `eventbridge.tf` | EventBridge event bus, rules and targets |
+| `sqs.tf` | Processing queues and dead-letter queues |
+| `dynamodb.tf` | Partner configuration and message state tables |
+| `firehose.tf` | Event delivery into Amazon S3 |
+| `glue.tf` | Glue database, external table and Data Catalog |
+| `athena.tf` | Athena workgroup and analytics configuration |
+| `cloudwatch.tf` | Log groups and monitoring resources |
+| `cloudtrail.tf` | API auditing and account activity logging |
+| `outputs.tf` | Deployment outputs including API endpoints and resource identifiers |
+
+## Deployment Workflow
+
+The infrastructure followed a standard Terraform deployment lifecycle.
+
+1. Initialise the working directory and required providers.
+2. Validate the Terraform configuration.
+3. Review the execution plan.
+4. Deploy the infrastructure to AWS.
+5. Validate the deployed resources through functional and end-to-end testing.
+6. Destroy the environment when testing was complete to minimise ongoing AWS costs.
+
+```bash
+terraform init
+terraform validate
+terraform plan
+terraform apply
 ```
 
----
+After successful testing, the entire environment could be removed using:
 
-## Documentation
+```bash
+terraform destroy
+```
 
-Detailed architecture documentation is available in the `docs/` folder, including:
+## Deployment Validation
 
-- Business requirements
-- Architecture Decision Log
-- Solution Architecture Document (SAD)
-- Implementation guide
-- Testing evidence
-- Production considerations
+Following deployment, each component was verified before end-to-end testing commenced. Validation included confirming successful resource creation, API Gateway availability, Lambda execution, EventBridge routing, SQS message flow, DynamoDB persistence, outbound webhook delivery, and the Terraform-provisioned analytics pipeline from EventBridge through Firehose, Amazon S3, AWS Glue, and Amazon Athena.
 
----
+The visualisation layer was validated separately by manually connecting QuickSight to Athena and creating representative dashboards through the AWS Console. This confirmed the dashboard workflow without treating QuickSight as Terraform-managed infrastructure.
 
-## Status
+This deployment approach ensured that the complete platform could be recreated consistently while supporting iterative improvements throughout the implementation lifecycle.
 
-Current phase:
+# 13. Conclusion
 
-✅ Lambda implementation complete
+This project demonstrates the design, implementation, and validation of a modern event-driven integration platform that transforms a tightly coupled legacy environment into a scalable, serverless architecture using AWS managed services.
 
-✅ Local testing complete
+The solution applies cloud-native design principles to support heterogeneous partner integrations, asynchronous business processes, secure partner communication, operational analytics, and Infrastructure as Code. Throughout the implementation, architectural decisions were continuously validated through deployment, testing, and targeted refinements to ensure that the final solution aligned with its original design objectives.
 
-⬜ Terraform deployment
+Beyond delivering a working implementation, this project provided valuable experience in translating business requirements into technical architecture, balancing functional and non-functional requirements, and applying iterative improvements based on practical implementation outcomes.
 
-⬜ AWS deployment
+The repository contains the complete Terraform configuration, Lambda source code, architecture diagrams, validation artefacts, and supporting documentation, providing a comprehensive reference for the design and implementation of the solution.
 
-⬜ End-to-end cloud validation
+# 14. Responsible Use of AI
 
----
+This project was developed using a combination of hands-on engineering and responsible use of generative AI as a technical assistant.
 
-## License
+AI tools were used to explore architectural alternatives, review implementation approaches, refine Infrastructure as Code, improve technical documentation, and challenge design decisions throughout the project. All architectural decisions, implementation changes, infrastructure deployment, testing, troubleshooting, validation, and final documentation were personally reviewed, verified, and completed by the author.
 
-This repository is provided for portfolio and educational purposes.
+The project reflects my practical understanding of AWS cloud architecture, serverless integration, Infrastructure as Code, and event-driven system design. AI accelerated research and documentation activities, while responsibility for the final solution, technical accuracy, and engineering outcomes remained entirely my own.
