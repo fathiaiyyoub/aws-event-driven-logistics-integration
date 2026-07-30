@@ -10,11 +10,17 @@ from .secrets_extension import get_secret
 
 
 MIN_TIMEOUT_SECONDS = 1
-MAX_TIMEOUT_SECONDS = 60
+# Leave runtime headroom inside the 60-second Response Lambda timeout for
+# configuration, secret retrieval, state transitions, and logging.
+MAX_TIMEOUT_SECONDS = 50
 SUPPORTED_MESSAGE_FORMATS = {"JSON", "XML"}
 
 
-def _deliver_https(response_event: dict, config: dict) -> dict:
+def _deliver_https(
+    response_event: dict,
+    config: dict,
+    idempotency_key: str,
+) -> dict:
     credentials = get_secret(config.get("secretId"))
     payload = serialize_response(
         response_event,
@@ -28,6 +34,7 @@ def _deliver_https(response_event: dict, config: dict) -> dict:
             else "application/json"
         ),
         "User-Agent": "aws-logistics-integration-platform",
+        "Idempotency-Key": idempotency_key,
     }
     if credentials.get("authorizationHeader"):
         headers["Authorization"] = credentials["authorizationHeader"]
@@ -162,7 +169,11 @@ def normalize_delivery_configuration(config: dict) -> dict:
     }
 
 
-def deliver_response(response_event: dict, config: dict) -> dict:
+def deliver_response(
+    response_event: dict,
+    config: dict,
+    idempotency_key: str,
+) -> dict:
     """Resolve and execute the registered handler for normalized config."""
 
     config = normalize_delivery_configuration(config)
@@ -175,4 +186,4 @@ def deliver_response(response_event: dict, config: dict) -> dict:
             f"Unsupported delivery method '{delivery_method}'. "
             f"Supported methods: {supported}."
         )
-    return handler(response_event, config)
+    return handler(response_event, config, idempotency_key)

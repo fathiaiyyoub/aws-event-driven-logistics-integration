@@ -93,7 +93,7 @@ class PartnerConfigurationTests(unittest.TestCase):
             self._get(valid_item(messageFormat="CSV"))
 
     def test_invalid_timeout_values_are_rejected(self):
-        for timeout in (0, 61, "not-a-number", True):
+        for timeout in (0, 51, "not-a-number", True):
             with self.subTest(timeout=timeout):
                 with self.assertRaises(PartnerConfigurationError):
                     self._get(valid_item(timeoutSeconds=timeout))

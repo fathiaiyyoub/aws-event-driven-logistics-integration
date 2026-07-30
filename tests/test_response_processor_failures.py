@@ -1,85 +1,17 @@
-import json
 import unittest
 from unittest.mock import patch
 
-from lambdas.response_processor.errors import (
-    DeliveryError,
-    PartnerConfigurationError,
-)
+from lambdas.common.state_store import CLAIM_ACQUIRED, CLAIM_EXHAUSTED
+from lambdas.response_processor.errors import DeliveryError
 from lambdas.response_processor.lambda_function import lambda_handler
-
-
-RESPONSE_EVENT = {
-    "eventId": "response-1",
-    "eventType": "ProcessingResponse",
-    "eventSource": "legacy.logistics.worker",
-    "timestamp": "2026-01-01T10:05:00Z",
-    "correlation": {
-        "correlationId": "corr-1",
-        "partnerId": "partner-001",
-        "sourceSystem": "partner-001",
-        "originalFormat": "JSON",
-        "receivedAt": "2026-01-01T10:00:00Z",
-    },
-    "requestEventId": "request-1",
-    "requestEventType": "CreateShipment",
-    "status": "SUCCESS",
-    "message": "Shipment processed successfully.",
-    "payload": {"shipmentId": "SHIP-1"},
-}
-
-CONFIG = {
-    "partnerId": "partner-001",
-    "enabled": True,
-    "deliveryMethod": "HTTPS_WEBHOOK",
-    "endpointUrl": "https://partner.example/callback",
-    "messageFormat": "JSON",
-    "secretId": None,
-    "timeoutSeconds": 10,
-}
-
-
-def event():
-    return {
-        "Records": [{
-            "messageId": "m1",
-            "body": json.dumps({"detail": RESPONSE_EVENT}),
-        }]
-    }
+from tests.test_response_processor import CONFIG, response_record
 
 
 class ResponseProcessorFailureTests(unittest.TestCase):
-    @patch("builtins.print")
-    @patch("lambdas.response_processor.lambda_function.update_delivery_status")
-    @patch("lambdas.response_processor.lambda_function.mark_delivery_attempt")
+    @patch("lambdas.response_processor.lambda_function.fail_delivery")
     @patch(
-        "lambdas.response_processor.lambda_function.get_partner_config",
-        side_effect=PartnerConfigurationError(
-            "deliveryMethod must be a non-empty string."
-        ),
-    )
-    def test_configuration_failure_does_not_increment_network_attempt(
-        self, mock_config, mock_attempt, mock_update, mock_print
-    ):
-        result = lambda_handler(event(), None)
-
-        self.assertEqual(
-            result,
-            {"batchItemFailures": [{"itemIdentifier": "m1"}]},
-        )
-        mock_attempt.assert_not_called()
-        self.assertEqual(mock_update.call_args.args[1], "CONFIGURATION_FAILED")
-        log_entry = json.loads(mock_print.call_args.args[0])
-        self.assertEqual(
-            log_entry["errorCategory"],
-            "PartnerConfigurationError",
-        )
-        self.assertNotIn("body", log_entry)
-
-    @patch("lambdas.response_processor.lambda_function.update_delivery_status")
-    @patch(
-        "lambdas.response_processor.lambda_function.mark_delivery_attempt",
-        return_value=1,
+        "lambdas.response_processor.lambda_function.claim_delivery",
+        return_value={"status": CLAIM_ACQUIRED, "attempt": 1},
     )
     @patch(
         "lambdas.response_processor.lambda_function.get_partner_config",
@@ -89,25 +21,22 @@ class ResponseProcessorFailureTests(unittest.TestCase):
         "lambdas.response_processor.lambda_function.deliver_response",
         side_effect=DeliveryError("sensitive destination detail"),
     )
-    def test_retryable_delivery_failure_is_sanitized(
-        self, mock_deliver, mock_config, mock_attempt, mock_update
+    def test_webhook_failure_records_retry_and_returns_batch_failure(
+        self, mock_deliver, mock_config, mock_claim, mock_fail
     ):
-        result = lambda_handler(event(), None)
+        result = lambda_handler({"Records": [response_record()]}, None)
 
         self.assertEqual(
             result,
             {"batchItemFailures": [{"itemIdentifier": "m1"}]},
         )
-        self.assertEqual(mock_update.call_args.args[1], "RETRYING")
-        self.assertNotIn(
-            "sensitive",
-            mock_update.call_args.kwargs["message"],
-        )
+        self.assertEqual(mock_fail.call_args.args[3], "RETRYING")
+        self.assertNotIn("sensitive", mock_fail.call_args.args[4])
 
-    @patch("lambdas.response_processor.lambda_function.update_delivery_status")
+    @patch("lambdas.response_processor.lambda_function.fail_delivery")
     @patch(
-        "lambdas.response_processor.lambda_function.mark_delivery_attempt",
-        return_value=3,
+        "lambdas.response_processor.lambda_function.claim_delivery",
+        return_value={"status": CLAIM_ACQUIRED, "attempt": 3},
     )
     @patch(
         "lambdas.response_processor.lambda_function.get_partner_config",
@@ -117,16 +46,63 @@ class ResponseProcessorFailureTests(unittest.TestCase):
         "lambdas.response_processor.lambda_function.deliver_response",
         side_effect=DeliveryError("destination down"),
     )
-    def test_terminal_delivery_failure_is_marked_failed(
-        self, mock_deliver, mock_config, mock_attempt, mock_update
+    def test_final_attempt_is_failed_and_left_for_dlq(
+        self, mock_deliver, mock_config, mock_claim, mock_fail
     ):
-        result = lambda_handler(event(), None)
+        result = lambda_handler({"Records": [response_record()]}, None)
 
         self.assertEqual(
             result,
             {"batchItemFailures": [{"itemIdentifier": "m1"}]},
         )
-        self.assertEqual(mock_update.call_args.args[1], "DELIVERY_FAILED")
+        self.assertEqual(mock_fail.call_args.args[3], "DELIVERY_FAILED")
+
+    @patch("lambdas.response_processor.lambda_function.deliver_response")
+    @patch(
+        "lambdas.response_processor.lambda_function.claim_delivery",
+        return_value={"status": CLAIM_EXHAUSTED, "attempt": None},
+    )
+    def test_exhausted_message_fails_without_more_webhooks(
+        self, mock_claim, mock_deliver
+    ):
+        result = lambda_handler({"Records": [response_record()]}, None)
+
+        self.assertEqual(
+            result,
+            {"batchItemFailures": [{"itemIdentifier": "m1"}]},
+        )
+        mock_deliver.assert_not_called()
+
+    @patch("lambdas.response_processor.lambda_function.complete_delivery")
+    @patch("lambdas.response_processor.lambda_function.fail_delivery")
+    @patch(
+        "lambdas.response_processor.lambda_function.claim_delivery",
+        side_effect=[
+            {"status": CLAIM_ACQUIRED, "attempt": 1},
+            {"status": CLAIM_ACQUIRED, "attempt": 1},
+        ],
+    )
+    @patch(
+        "lambdas.response_processor.lambda_function.get_partner_config",
+        return_value=CONFIG,
+    )
+    @patch(
+        "lambdas.response_processor.lambda_function.deliver_response",
+        side_effect=[DeliveryError("down"), {"statusCode": 204}],
+    )
+    def test_partial_batch_failure_does_not_retry_success(
+        self, mock_deliver, mock_config, mock_claim, mock_fail, mock_complete
+    ):
+        result = lambda_handler(
+            {"Records": [response_record("bad"), response_record("good")]},
+            None,
+        )
+
+        self.assertEqual(
+            result,
+            {"batchItemFailures": [{"itemIdentifier": "bad"}]},
+        )
+        mock_complete.assert_called_once()
 
 
 if __name__ == "__main__":

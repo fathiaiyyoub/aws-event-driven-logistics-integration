@@ -136,8 +136,9 @@ resource "aws_lambda_function" "worker" {
 
   environment {
     variables = {
-      EVENT_BUS_NAME      = aws_cloudwatch_event_bus.integration.name
-      MESSAGE_STATE_TABLE = aws_dynamodb_table.integration_message_state.name
+      EVENT_BUS_NAME           = aws_cloudwatch_event_bus.integration.name
+      MESSAGE_STATE_TABLE      = aws_dynamodb_table.integration_message_state.name
+      PROCESSING_LEASE_SECONDS = "120"
     }
   }
 
@@ -169,6 +170,7 @@ resource "aws_lambda_function" "response" {
     variables = {
       PARTNER_CONFIG_TABLE              = aws_dynamodb_table.partner_configuration.name
       MAX_DELIVERY_ATTEMPTS             = "3"
+      DELIVERY_LEASE_SECONDS            = "120"
       MESSAGE_STATE_TABLE               = aws_dynamodb_table.integration_message_state.name
       SECRETS_EXTENSION_TIMEOUT_SECONDS = "3"
     }

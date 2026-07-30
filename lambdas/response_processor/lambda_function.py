@@ -1,5 +1,6 @@
 import json
 import os
+import uuid
 
 from .config_store import get_partner_config
 from .delivery import deliver_response
@@ -10,12 +11,18 @@ from .errors import (
 )
 from .secrets_extension import CredentialRetrievalError
 from lambdas.common.state_store import (
-    mark_delivery_attempt,
-    update_delivery_status,
+    CLAIM_ACQUIRED,
+    CLAIM_DELIVERED,
+    CLAIM_EXHAUSTED,
+    ClaimOwnershipError,
+    claim_delivery,
+    complete_delivery,
+    fail_delivery,
 )
 
 
 MAX_DELIVERY_ATTEMPTS = int(os.getenv("MAX_DELIVERY_ATTEMPTS", "3"))
+DELIVERY_LEASE_SECONDS = int(os.getenv("DELIVERY_LEASE_SECONDS", "120"))
 
 
 def _log(message, *, message_id, category, correlation_id=None,
@@ -39,6 +46,7 @@ def _parse_response_record(record):
         correlation = response_event["correlation"]
         correlation_id = correlation["correlationId"]
         partner_id = correlation["partnerId"]
+        delivery_id = response_event["eventId"]
     except (
         AttributeError,
         KeyError,
@@ -49,25 +57,40 @@ def _parse_response_record(record):
             "The response queue message does not match the required contract."
         ) from exc
 
-    if not isinstance(correlation_id, str) or not correlation_id.strip():
-        raise ResponseMessageError("correlationId must be a non-empty string.")
-    if not isinstance(partner_id, str) or not partner_id.strip():
-        raise ResponseMessageError("partnerId must be a non-empty string.")
+    for name, value in (
+        ("correlationId", correlation_id),
+        ("partnerId", partner_id),
+        ("eventId", delivery_id),
+    ):
+        if not isinstance(value, str) or not value.strip():
+            raise ResponseMessageError(f"{name} must be a non-empty string.")
 
-    return response_event, correlation_id.strip(), partner_id.strip()
+    return (
+        response_event,
+        correlation_id.strip(),
+        partner_id.strip(),
+        delivery_id.strip(),
+    )
 
 
-def _safe_state_update(correlation_id, status, message):
-    if not correlation_id:
-        return
+def _owned_failure(
+    correlation_id,
+    delivery_id,
+    claim_token,
+    status,
+    message,
+):
     try:
-        update_delivery_status(
+        fail_delivery(
             correlation_id,
+            delivery_id,
+            claim_token,
             status,
-            message=message,
+            message,
         )
+    except ClaimOwnershipError:
+        pass
     except Exception:
-        # A state-write failure must not hide the original delivery outcome.
         pass
 
 
@@ -80,36 +103,18 @@ def lambda_handler(event, context):
         message_id = record.get("messageId", "unknown")
         correlation_id = None
         partner_id = None
+        delivery_id = None
         attempt = None
+        claim_token = str(uuid.uuid4())
+        claim_acquired = False
 
         try:
-            response_event, correlation_id, partner_id = (
-                _parse_response_record(record)
-            )
-
-            # Configuration defects are resolved before counting a real
-            # outbound network-delivery attempt.
-            config = get_partner_config(partner_id)
-
-        except PartnerConfigurationError as exc:
-            safe_message = str(exc)
-            _safe_state_update(
+            (
+                response_event,
                 correlation_id,
-                "CONFIGURATION_FAILED",
-                safe_message,
-            )
-            _log(
-                safe_message,
-                message_id=message_id,
-                correlation_id=correlation_id,
-                partner_id=partner_id,
-                category=type(exc).__name__,
-            )
-            # Preserve the record through normal SQS retry/DLQ handling without
-            # counting a network attempt. It can be redriven after correction.
-            batch_item_failures.append({"itemIdentifier": message_id})
-            continue
-
+                partner_id,
+                delivery_id,
+            ) = _parse_response_record(record)
         except ResponseMessageError as exc:
             _log(
                 str(exc),
@@ -122,13 +127,43 @@ def lambda_handler(event, context):
             continue
 
         try:
-            attempt = mark_delivery_attempt(correlation_id)
-            result = deliver_response(response_event, config)
-
-            update_delivery_status(
+            claim = claim_delivery(
                 correlation_id,
-                "DELIVERED",
-                message=(
+                delivery_id,
+                claim_token,
+                DELIVERY_LEASE_SECONDS,
+                MAX_DELIVERY_ATTEMPTS,
+            )
+            if claim["status"] == CLAIM_DELIVERED:
+                continue
+            if claim["status"] in (CLAIM_EXHAUSTED,):
+                _log(
+                    "Maximum outbound delivery attempts already exhausted.",
+                    message_id=message_id,
+                    correlation_id=correlation_id,
+                    partner_id=partner_id,
+                    category="DELIVERY_ATTEMPTS_EXHAUSTED",
+                )
+                batch_item_failures.append({"itemIdentifier": message_id})
+                continue
+            if claim["status"] != CLAIM_ACQUIRED:
+                batch_item_failures.append({"itemIdentifier": message_id})
+                continue
+
+            claim_acquired = True
+            attempt = claim["attempt"]
+            config = get_partner_config(partner_id)
+            result = deliver_response(
+                response_event,
+                config,
+                delivery_id,
+            )
+
+            complete_delivery(
+                correlation_id,
+                delivery_id,
+                claim_token,
+                (
                     f"Delivered using {config['deliveryMethod']} "
                     f"on attempt {attempt}."
                 ),
@@ -143,11 +178,28 @@ def lambda_handler(event, context):
                 category=None,
             )
 
-        except (DeliveryError, CredentialRetrievalError) as exc:
-            terminal = (
-                attempt is not None
-                and attempt >= MAX_DELIVERY_ATTEMPTS
+        except PartnerConfigurationError as exc:
+            safe_message = str(exc)
+            if claim_acquired:
+                _owned_failure(
+                    correlation_id,
+                    delivery_id,
+                    claim_token,
+                    "CONFIGURATION_FAILED",
+                    safe_message,
+                )
+            _log(
+                safe_message,
+                message_id=message_id,
+                correlation_id=correlation_id,
+                partner_id=partner_id,
+                attempt=attempt,
+                category=type(exc).__name__,
             )
+            batch_item_failures.append({"itemIdentifier": message_id})
+
+        except (DeliveryError, CredentialRetrievalError) as exc:
+            terminal = attempt is not None and attempt >= MAX_DELIVERY_ATTEMPTS
             status = "DELIVERY_FAILED" if terminal else "RETRYING"
             category = (
                 "CREDENTIAL_RETRIEVAL_FAILED"
@@ -159,7 +211,14 @@ def lambda_handler(event, context):
                 if terminal
                 else "Outbound delivery failed and will be retried."
             )
-            _safe_state_update(correlation_id, status, safe_message)
+            if claim_acquired:
+                _owned_failure(
+                    correlation_id,
+                    delivery_id,
+                    claim_token,
+                    status,
+                    safe_message,
+                )
             _log(
                 safe_message,
                 message_id=message_id,
@@ -172,11 +231,14 @@ def lambda_handler(event, context):
 
         except Exception:
             safe_message = "Unexpected outbound delivery failure."
-            _safe_state_update(
-                correlation_id,
-                "DELIVERY_FAILED",
-                safe_message,
-            )
+            if claim_acquired:
+                _owned_failure(
+                    correlation_id,
+                    delivery_id,
+                    claim_token,
+                    "DELIVERY_FAILED",
+                    safe_message,
+                )
             _log(
                 safe_message,
                 message_id=message_id,

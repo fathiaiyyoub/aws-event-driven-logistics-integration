@@ -10,7 +10,7 @@ resource "aws_sqs_queue" "shipment_processing_dlq" {
 
 resource "aws_sqs_queue" "shipment_processing" {
   name                       = "${local.common_name_prefix}-shipment-processing"
-  visibility_timeout_seconds = 180
+  visibility_timeout_seconds = 360
   receive_wait_time_seconds  = 20
   sqs_managed_sse_enabled    = true
 
@@ -36,7 +36,7 @@ resource "aws_sqs_queue" "response_dlq" {
 
 resource "aws_sqs_queue" "response" {
   name                       = "${local.common_name_prefix}-response"
-  visibility_timeout_seconds = 180
+  visibility_timeout_seconds = 360
   receive_wait_time_seconds  = 20
   sqs_managed_sse_enabled    = true
 

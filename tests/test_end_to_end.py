@@ -8,8 +8,14 @@ from lambdas.worker.lambda_function import lambda_handler as worker_handler
 
 class EndToEndTests(unittest.TestCase):
     @patch("lambdas.adapter.lambda_function.create_message_state")
-    @patch("lambdas.worker.lambda_function.update_processing_status")
-    def test_end_to_end_processing(self, mock_update, mock_create_state):
+    @patch("lambdas.worker.lambda_function.complete_processing")
+    @patch(
+        "lambdas.worker.lambda_function.claim_processing",
+        return_value="ACQUIRED",
+    )
+    def test_end_to_end_processing(
+        self, mock_claim, mock_complete, mock_create_state
+    ):
         published_event = {}
         response_event = {}
 

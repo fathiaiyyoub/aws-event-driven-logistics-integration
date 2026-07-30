@@ -1,17 +1,26 @@
 import json
 import os
+import uuid
 
 import boto3
 
 from .validator import validate_event
 from .processor import process_event
 from .response import build_response_event
-from lambdas.common.state_store import update_processing_status
+from lambdas.common.state_store import (
+    CLAIM_ACQUIRED,
+    CLAIM_COMPLETED,
+    ClaimOwnershipError,
+    claim_processing,
+    complete_processing,
+    fail_processing,
+)
 
 
 events = boto3.client("events")
 EVENT_BUS_NAME = os.getenv("EVENT_BUS_NAME")
 EVENT_SOURCE = "legacy.logistics.worker"
+PROCESSING_LEASE_SECONDS = int(os.getenv("PROCESSING_LEASE_SECONDS", "120"))
 
 
 def lambda_handler(event, context):
@@ -21,15 +30,30 @@ def lambda_handler(event, context):
 
     for record in event.get("Records", []):
         message_id = record.get("messageId", "unknown")
+        correlation_id = None
+        claim_token = str(uuid.uuid4())
+        claim_acquired = False
 
         try:
             message = json.loads(record["body"])
             canonical_event = message.get("detail", message)
             correlation_id = canonical_event["correlation"]["correlationId"]
+            request_event_id = canonical_event["eventId"]
 
-            update_processing_status(correlation_id, "PROCESSING")
+            claim_status = claim_processing(
+                correlation_id,
+                request_event_id,
+                claim_token,
+                PROCESSING_LEASE_SECONDS,
+            )
+            if claim_status == CLAIM_COMPLETED:
+                continue
+            if claim_status != CLAIM_ACQUIRED:
+                batch_item_failures.append({"itemIdentifier": message_id})
+                continue
+            claim_acquired = True
+
             valid, reason = validate_event(canonical_event)
-
             if not valid:
                 processing_result = {
                     "status": "VALIDATION_FAILED",
@@ -38,22 +62,36 @@ def lambda_handler(event, context):
             else:
                 processing_result = process_event(canonical_event)
 
-            update_processing_status(
-                correlation_id,
-                processing_result["status"],
-                processing_result["message"],
+            response_event = build_response_event(
+                canonical_event,
+                processing_result,
             )
-            publish_response(build_response_event(canonical_event, processing_result))
+
+            # Publication intentionally precedes COMPLETED. A crash between
+            # these operations can republish the deterministic response ID,
+            # but cannot lose the response through premature acknowledgement.
+            publish_response(response_event)
+            complete_processing(
+                correlation_id,
+                claim_token,
+                processing_result["message"],
+                response_event["eventId"],
+            )
 
         except Exception as exc:
-            try:
-                correlation_id = canonical_event.get("correlation", {}).get("correlationId")
-                if correlation_id:
-                    update_processing_status(correlation_id, "PROCESSING_FAILED", str(exc))
-            except Exception:
-                pass
+            if claim_acquired and correlation_id:
+                try:
+                    fail_processing(correlation_id, claim_token, str(exc))
+                except ClaimOwnershipError:
+                    pass
+                except Exception:
+                    pass
 
-            print(json.dumps({"message": "Worker processing failed.", "messageId": message_id, "error": str(exc)}))
+            print(json.dumps({
+                "message": "Worker processing failed.",
+                "messageId": message_id,
+                "error": str(exc),
+            }))
             batch_item_failures.append({"itemIdentifier": message_id})
 
     return {"batchItemFailures": batch_item_failures}

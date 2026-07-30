@@ -1,70 +1,92 @@
-import json
 import unittest
 from unittest.mock import patch
 
+from lambdas.common.state_store import CLAIM_ACQUIRED
 from lambdas.worker.lambda_function import lambda_handler
-
-
-def canonical_event(**overrides):
-    event = {
-        "eventId": "evt-1",
-        "eventType": "CreateShipment",
-        "eventSource": "partner.dhl",
-        "timestamp": "2026-01-01T00:00:00Z",
-        "correlation": {
-            "correlationId": "corr-1",
-            "partnerId": "DHL",
-            "sourceSystem": "partner.dhl",
-            "originalFormat": "JSON",
-            "receivedAt": "2026-01-01T10:00:00Z",
-        },
-        "payload": {"shipmentId": "SHIP-1"},
-    }
-    event.update(overrides)
-    return event
+from tests.test_worker import canonical_event, record
 
 
 class WorkerFailureTests(unittest.TestCase):
+    @patch("lambdas.worker.lambda_function.complete_processing")
     @patch("lambdas.worker.lambda_function.publish_response")
-    @patch("lambdas.worker.lambda_function.update_processing_status")
-    def test_validation_failure_is_recorded_and_response_is_published(self, mock_update, mock_publish):
-        event = canonical_event(eventType="UnsupportedEvent")
-        sqs_event = {"Records": [{"messageId": "m1", "body": json.dumps({"detail": event})}]}
+    @patch(
+        "lambdas.worker.lambda_function.claim_processing",
+        return_value=CLAIM_ACQUIRED,
+    )
+    def test_validation_failure_is_a_completed_business_response(
+        self, mock_claim, mock_publish, mock_complete
+    ):
+        invalid = canonical_event()
+        invalid["eventType"] = "UnsupportedEvent"
 
-        result = lambda_handler(sqs_event, None)
+        result = lambda_handler(
+            {"Records": [record(event=invalid)]},
+            None,
+        )
 
         self.assertEqual(result, {"batchItemFailures": []})
-        statuses = [call.args[1] for call in mock_update.call_args_list]
-        self.assertEqual(statuses, ["PROCESSING", "VALIDATION_FAILED"])
-        mock_publish.assert_called_once()
         self.assertEqual(mock_publish.call_args.args[0]["status"], "VALIDATION_FAILED")
+        mock_complete.assert_called_once()
 
-    @patch("lambdas.worker.lambda_function.publish_response", side_effect=RuntimeError("EventBridge unavailable"))
-    @patch("lambdas.worker.lambda_function.update_processing_status")
-    def test_publish_failure_returns_partial_batch_failure(self, mock_update, mock_publish):
-        sqs_event = {"Records": [{"messageId": "m1", "body": json.dumps({"detail": canonical_event()})}]}
+    @patch("lambdas.worker.lambda_function.fail_processing")
+    @patch("lambdas.worker.lambda_function.publish_response", side_effect=RuntimeError("down"))
+    @patch(
+        "lambdas.worker.lambda_function.claim_processing",
+        return_value=CLAIM_ACQUIRED,
+    )
+    def test_publish_failure_releases_owned_claim_for_retry(
+        self, mock_claim, mock_publish, mock_fail
+    ):
+        result = lambda_handler({"Records": [record()]}, None)
 
-        with patch("lambdas.worker.lambda_function.process_event", return_value={
-            "status": "SUCCESS", "message": "ok", "shipmentId": "SHIP-1"
-        }):
-            result = lambda_handler(sqs_event, None)
+        self.assertEqual(
+            result,
+            {"batchItemFailures": [{"itemIdentifier": "m1"}]},
+        )
+        mock_fail.assert_called_once()
 
-        self.assertEqual(result, {"batchItemFailures": [{"itemIdentifier": "m1"}]})
-        statuses = [call.args[1] for call in mock_update.call_args_list]
-        self.assertIn("PROCESSING_FAILED", statuses)
+    @patch("lambdas.worker.lambda_function.complete_processing")
+    @patch("lambdas.worker.lambda_function.fail_processing")
+    @patch(
+        "lambdas.worker.lambda_function.publish_response",
+        side_effect=[RuntimeError("down"), None],
+    )
+    @patch(
+        "lambdas.worker.lambda_function.claim_processing",
+        return_value=CLAIM_ACQUIRED,
+    )
+    def test_processing_failure_can_retry_successfully(
+        self, mock_claim, mock_publish, mock_fail, mock_complete
+    ):
+        first = lambda_handler({"Records": [record("first")]}, None)
+        retry = lambda_handler({"Records": [record("retry")]}, None)
 
-    @patch("lambdas.worker.lambda_function.update_processing_status")
-    def test_bad_json_fails_only_the_bad_record(self, mock_update):
-        good = {"messageId": "good", "body": json.dumps({"detail": canonical_event()})}
+        self.assertEqual(
+            first,
+            {"batchItemFailures": [{"itemIdentifier": "first"}]},
+        )
+        self.assertEqual(retry, {"batchItemFailures": []})
+        mock_fail.assert_called_once()
+        mock_complete.assert_called_once()
+
+    @patch("lambdas.worker.lambda_function.complete_processing")
+    @patch("lambdas.worker.lambda_function.publish_response")
+    @patch(
+        "lambdas.worker.lambda_function.claim_processing",
+        return_value=CLAIM_ACQUIRED,
+    )
+    def test_partial_batch_failure_does_not_retry_success(
+        self, mock_claim, mock_publish, mock_complete
+    ):
         bad = {"messageId": "bad", "body": "not-json"}
+        result = lambda_handler({"Records": [bad, record("good")]}, None)
 
-        with patch("lambdas.worker.lambda_function.publish_response"), patch(
-            "lambdas.worker.lambda_function.process_event",
-            return_value={"status": "SUCCESS", "message": "ok", "shipmentId": "SHIP-1"},
-        ):
-            result = lambda_handler({"Records": [bad, good]}, None)
-
-        self.assertEqual(result, {"batchItemFailures": [{"itemIdentifier": "bad"}]})
+        self.assertEqual(
+            result,
+            {"batchItemFailures": [{"itemIdentifier": "bad"}]},
+        )
+        mock_publish.assert_called_once()
+        mock_complete.assert_called_once()
 
 
 if __name__ == "__main__":
